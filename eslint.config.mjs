@@ -19,12 +19,6 @@ export default tseslint.config(
     },
   },
   {
-    ignores: [
-      '**/dist/**',
-      '**/node_modules/**',
-      '**/.next/**',
-      '**/build/**',
-      '**/coverage/**',
-    ],
+    ignores: ['**/dist/**', '**/node_modules/**', '**/.next/**', '**/build/**', '**/coverage/**'],
   }
 );
