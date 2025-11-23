@@ -6,11 +6,14 @@
     "dev": "next dev --turbo",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint",
+    "lint": "eslint .",
     "format": "prettier --write .",
-    "format:check": "prettier --check ."
+    "format:check": "prettier --check .",
+    "typecheck": "tsc --noEmit",
+    "ci": "pnpm run lint && pnpm run format:check && pnpm run typecheck && pnpm run build"
   },
   "dependencies": {
+    "geist": "^1.5.1",
     "next": "16.0.3",
     "react": "19.2.0",
     "react-dom": "19.2.0"
@@ -23,6 +26,7 @@
     "eslint": "^9",
     "eslint-config-next": "16.0.3",
     "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-import": "^2.31.0",
     "prettier": "^3.6.2",
     "tailwindcss": "^4",
     "typescript": "^5"
