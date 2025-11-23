@@ -1,0 +1,8 @@
+[tools]
+node = "22"
+pnpm = "latest"
+
+[settings]
+
+[settings.node]
+compile = false
