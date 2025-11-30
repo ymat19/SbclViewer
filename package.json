@@ -13,6 +13,10 @@
     "ci": "pnpm run lint && pnpm run format:check && pnpm run typecheck && pnpm run build"
   },
   "dependencies": {
+    "@chakra-ui/react": "^3.30.0",
+    "@emotion/react": "^11.14.0",
+    "@emotion/styled": "^11.14.1",
+    "framer-motion": "^12.23.24",
     "geist": "^1.5.1",
     "next": "16.0.3",
     "react": "19.2.0",
