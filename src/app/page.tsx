@@ -13,13 +13,28 @@ import {
   Spinner,
   Badge,
   Tabs,
+  Button,
+  createToaster,
+  Toaster,
+  ToastRoot,
+  ToastTitle,
+  ToastDescription,
+  ToastCloseTrigger,
+  ToastActionTrigger,
 } from '@chakra-ui/react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Suspense, useEffect, useState } from 'react';
+import { AnimatePresence } from 'framer-motion';
 
 import { SwipeableAnimeItem } from '@/components/SwipeableAnimeItem';
 import { useAnimeStatuses } from '@/hooks/useAnimeStatuses';
-import type { Anime, Song, ViewTab } from '@/types/anime';
+import type { Anime, Song, ViewTab, AnimeStatus } from '@/types/anime';
+
+const toaster = createToaster({
+  placement: 'bottom',
+  duration: 4000,
+  max: 1, // 同時に1つのトーストのみ表示
+});
 
 function HomeContent() {
   const router = useRouter();
@@ -28,6 +43,33 @@ function HomeContent() {
   const [quarters, setQuarters] = useState<string[]>([]);
   const [currentTab, setCurrentTab] = useState<ViewTab>('unselected');
   const { statuses: animeStatuses, setStatus: setAnimeStatus } = useAnimeStatuses();
+
+  // Enhanced setStatus with undo functionality
+  const handleSetStatus = (id: string, newStatus: AnimeStatus | null) => {
+    const anime = animeData.find((a) => a.id === id);
+    const previousStatus = animeStatuses.get(id) || null;
+    
+    // Set the new status
+    setAnimeStatus(id, newStatus);
+
+    // Show toast with undo option
+    const statusText = newStatus === 'watched' ? '視聴済み' : newStatus === 'unwatched' ? '未視聴' : '未選択';
+    toaster.create({
+      title: `${anime?.name} → ${statusText}`,
+      type: 'success',
+      action: {
+        label: '元に戻す',
+        onClick: () => {
+          setAnimeStatus(id, previousStatus);
+          toaster.create({
+            title: '取り消しました',
+            type: 'info',
+            duration: 2000,
+          });
+        },
+      },
+    });
+  };
   const [isLoading, setIsLoading] = useState(true);
 
   // Get selected quarter from URL or use latest
@@ -118,8 +160,28 @@ function HomeContent() {
   }
 
   return (
-    <Box minH="100vh" bg="gray.50" _dark={{ bg: 'gray.900' }} py={4} px={4}>
-      <Container maxW="6xl">
+    <>
+      <Toaster toaster={toaster}>
+        {(toast) => (
+          <ToastRoot key={toast.id} width="auto" maxW="90vw" p={2}>
+            {toast.title && (
+              <ToastTitle fontSize="sm" mb={0}>
+                {toast.title}
+              </ToastTitle>
+            )}
+            <ToastCloseTrigger top={1} right={1} />
+            {toast.action && (
+              <ToastActionTrigger asChild>
+                <Button size="xs" variant="outline" mt={1} onClick={toast.action.onClick}>
+                  {toast.action.label}
+                </Button>
+              </ToastActionTrigger>
+            )}
+          </ToastRoot>
+        )}
+      </Toaster>
+      <Box minH="100vh" bg="gray.50" _dark={{ bg: 'gray.900' }} py={4} px={4}>
+        <Container maxW="6xl">
         <VStack gap={6} align="stretch">
           <Heading
             as="h1"
@@ -204,14 +266,16 @@ function HomeContent() {
                     </Card.Body>
                   ) : (
                     <VStack gap={0} align="stretch" divideY="1px">
-                      {filteredAnime.map((anime) => (
-                        <SwipeableAnimeItem
-                          key={anime.id}
-                          anime={anime}
-                          currentTab={currentTab}
-                          onSetStatus={setAnimeStatus}
-                        />
-                      ))}
+                      <AnimatePresence mode="popLayout">
+                        {filteredAnime.map((anime) => (
+                          <SwipeableAnimeItem
+                            key={anime.id}
+                            anime={anime}
+                            currentTab={currentTab}
+                            onSetStatus={handleSetStatus}
+                          />
+                        ))}
+                      </AnimatePresence>
                     </VStack>
                   )}
                 </Card.Root>
@@ -278,6 +342,7 @@ function HomeContent() {
         </VStack>
       </Container>
     </Box>
+    </>
   );
 }
 
