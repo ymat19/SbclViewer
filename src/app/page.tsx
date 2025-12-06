@@ -97,7 +97,9 @@ function HomeContent() {
         // Set default to 2010q1 if not in URL
         if (uniqueQuarters.length > 0 && !searchParams.get('quarter')) {
           const params = new URLSearchParams(searchParams.toString());
-          const defaultQuarter = uniqueQuarters.includes('2010q1') ? '2010q1' : uniqueQuarters[uniqueQuarters.length - 1];
+          const defaultQuarter = uniqueQuarters.includes('2010q1')
+            ? '2010q1'
+            : uniqueQuarters[uniqueQuarters.length - 1];
           params.set('quarter', defaultQuarter as string);
           router.replace(`?${params.toString()}`);
         }
