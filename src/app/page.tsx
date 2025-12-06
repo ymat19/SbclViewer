@@ -188,6 +188,8 @@ function HomeContent() {
             <Heading
               as="h1"
               size={{ base: 'lg', md: '2xl' }}
+              color="gray.900"
+              _dark={{ color: 'white' }}
             >
               Anime Song Playlist Creator
             </Heading>
@@ -210,7 +212,8 @@ function HomeContent() {
                 value={selectedQuarter}
                 onChange={(e) => setSelectedQuarter(e.target.value)}
                 bg="white"
-                _dark={{ bg: 'gray.800' }}
+                color="gray.900"
+                _dark={{ bg: 'gray.800', color: 'gray.100' }}
               >
                 {quarters.map((quarter) => (
                   <option key={quarter} value={quarter}>
@@ -223,7 +226,7 @@ function HomeContent() {
 
           {/* Anime List with Tabs */}
           <Box overflow="hidden">
-            <Heading as="h2" size={{ base: 'md', md: 'lg' }} mb={4}>
+            <Heading as="h2" size={{ base: 'md', md: 'lg' }} mb={4} color="gray.900" _dark={{ color: 'white' }}>
               Anime List
             </Heading>
             <Tabs.Root
@@ -289,7 +292,7 @@ function HomeContent() {
           {/* Songs List */}
           <Box>
             <Flex justify="space-between" align="center" mb={4} flexWrap="wrap" gap={2}>
-              <Heading as="h2" size={{ base: 'md', md: 'lg' }}>
+              <Heading as="h2" size={{ base: 'md', md: 'lg' }} color="gray.900" _dark={{ color: 'white' }}>
                 Songs from Watched Anime
               </Heading>
               <Badge
