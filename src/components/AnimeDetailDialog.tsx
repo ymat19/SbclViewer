@@ -13,7 +13,7 @@ import {
   Button,
   IconButton,
 } from '@chakra-ui/react';
-import { Box, VStack, Text, Badge, Link, Image, Portal } from '@chakra-ui/react';
+import { Box, VStack, Text, Badge, Link, Portal } from '@chakra-ui/react';
 import { ExternalLink, X } from 'lucide-react';
 
 import type { Anime } from '@/types/anime';
