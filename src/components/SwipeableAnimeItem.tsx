@@ -10,11 +10,17 @@ interface SwipeableAnimeItemProps {
   anime: Anime;
   currentTab: ViewTab;
   onSetStatus: (id: string, status: AnimeStatus | null) => void;
+  onClickAnime?: (anime: Anime) => void;
 }
 
 const MotionBox = chakra(motion.div);
 
-export function SwipeableAnimeItem({ anime, currentTab, onSetStatus }: SwipeableAnimeItemProps) {
+export function SwipeableAnimeItem({
+  anime,
+  currentTab,
+  onSetStatus,
+  onClickAnime,
+}: SwipeableAnimeItemProps) {
   const x = useMotionValue(0);
 
   // Set background colors based on current tab
@@ -65,6 +71,12 @@ export function SwipeableAnimeItem({ anime, currentTab, onSetStatus }: Swipeable
         // Right swipe -> unselected
         onSetStatus(anime.id, null);
       }
+    }
+  };
+
+  const handleClick = () => {
+    if (onClickAnime) {
+      onClickAnime(anime);
     }
   };
 
@@ -134,6 +146,7 @@ export function SwipeableAnimeItem({ anime, currentTab, onSetStatus }: Swipeable
         dragElastic={0.7}
         dragMomentum={false}
         onDragEnd={handleDragEnd}
+        onTap={handleClick}
         style={{ x }}
         position="relative"
         bg="white"

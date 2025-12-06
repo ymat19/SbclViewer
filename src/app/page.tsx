@@ -26,6 +26,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { Suspense, useEffect, useState } from 'react';
 
 import { SwipeableAnimeItem } from '@/components/SwipeableAnimeItem';
+import { AnimeDetailDialog } from '@/components/AnimeDetailDialog';
 import { ColorModeButton } from '@/components/ui/color-mode';
 import { useAnimeStatuses } from '@/hooks/useAnimeStatuses';
 import type { Anime, Song, ViewTab, AnimeStatus } from '@/types/anime';
@@ -43,6 +44,8 @@ function HomeContent() {
   const [quarters, setQuarters] = useState<string[]>([]);
   const [currentTab, setCurrentTab] = useState<ViewTab>('unselected');
   const { statuses: animeStatuses, setStatus: setAnimeStatus } = useAnimeStatuses();
+  const [selectedAnime, setSelectedAnime] = useState<Anime | null>(null);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
 
   // Enhanced setStatus with undo functionality
   const handleSetStatus = (id: string, newStatus: AnimeStatus | null) => {
@@ -97,6 +100,17 @@ function HomeContent() {
     if (currentIndex < quarters.length - 1) {
       setSelectedQuarter(quarters[currentIndex + 1]);
     }
+  };
+
+  // Handle anime click to show details
+  const handleAnimeClick = (anime: Anime) => {
+    setSelectedAnime(anime);
+    setIsDialogOpen(true);
+  };
+
+  const handleCloseDialog = () => {
+    setIsDialogOpen(false);
+    setSelectedAnime(null);
   };
 
   // Load anime data
@@ -200,6 +214,7 @@ function HomeContent() {
           </ToastRoot>
         )}
       </Toaster>
+      <AnimeDetailDialog anime={selectedAnime} open={isDialogOpen} onClose={handleCloseDialog} />
       <Box minH="100vh" bg="gray.50" _dark={{ bg: 'gray.900' }} py={4} px={4}>
         <Container maxW="6xl">
           <VStack gap={6} align="stretch">
@@ -324,6 +339,7 @@ function HomeContent() {
                               anime={anime}
                               currentTab={currentTab}
                               onSetStatus={handleSetStatus}
+                              onClickAnime={handleAnimeClick}
                             />
                           ))}
                         </AnimatePresence>

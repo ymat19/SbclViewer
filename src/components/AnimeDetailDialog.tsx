@@ -1,0 +1,171 @@
+'use client';
+
+import {
+  DialogRoot,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogBody,
+  DialogFooter,
+  DialogCloseTrigger,
+  DialogBackdrop,
+  DialogPositioner,
+  Button,
+  IconButton,
+} from '@chakra-ui/react';
+import { Box, VStack, Text, Badge, Link, Image, Portal } from '@chakra-ui/react';
+import { ExternalLink, X } from 'lucide-react';
+
+import type { Anime } from '@/types/anime';
+
+interface AnimeDetailDialogProps {
+  anime: Anime | null;
+  open: boolean;
+  onClose: () => void;
+}
+
+export function AnimeDetailDialog({ anime, open, onClose }: AnimeDetailDialogProps) {
+  if (!anime) return null;
+
+  return (
+    <DialogRoot open={open} onOpenChange={(e) => !e.open && onClose()} size="lg" placement="center">
+      <Portal>
+        <DialogBackdrop />
+        <DialogPositioner>
+          <DialogContent
+            boxShadow="2xl"
+            borderRadius="lg"
+            border="1px solid"
+            borderColor="gray.200"
+            _dark={{ borderColor: 'gray.700' }}
+          >
+            <IconButton
+              aria-label="Close dialog"
+              onClick={onClose}
+              position="absolute"
+              top={2}
+              right={2}
+              variant="ghost"
+              size="sm"
+            >
+              <X size={20} />
+            </IconButton>
+            <DialogHeader>
+              <DialogTitle>{anime.name}</DialogTitle>
+            </DialogHeader>
+            <DialogBody>
+              <VStack align="stretch" gap={4}>
+                {/* Quarter Info */}
+                <Box>
+                  <Text
+                    fontSize="sm"
+                    fontWeight="medium"
+                    color="gray.600"
+                    _dark={{ color: 'gray.400' }}
+                  >
+                    クォータ
+                  </Text>
+                  <Badge colorScheme="blue" mt={1}>
+                    {anime.quarter}
+                  </Badge>
+                </Box>
+
+                {/* Image */}
+                {anime.imageUrl && (
+                  <Box>
+                    <Image
+                      src={anime.imageUrl}
+                      alt={anime.name}
+                      borderRadius="md"
+                      maxH="200px"
+                      objectFit="cover"
+                      width="100%"
+                    />
+                  </Box>
+                )}
+
+                {/* URL */}
+                {anime.url && (
+                  <Box>
+                    <Text
+                      fontSize="sm"
+                      fontWeight="medium"
+                      color="gray.600"
+                      _dark={{ color: 'gray.400' }}
+                    >
+                      詳細情報
+                    </Text>
+                    <Link
+                      href={anime.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      color="blue.500"
+                      _dark={{ color: 'blue.300' }}
+                      display="flex"
+                      alignItems="center"
+                      gap={1}
+                      mt={1}
+                      fontSize="sm"
+                    >
+                      <span>公式サイトを開く</span>
+                      <ExternalLink size={14} />
+                    </Link>
+                  </Box>
+                )}
+
+                {/* Songs */}
+                <Box>
+                  <Text
+                    fontSize="sm"
+                    fontWeight="medium"
+                    color="gray.600"
+                    _dark={{ color: 'gray.400' }}
+                    mb={2}
+                  >
+                    楽曲一覧 ({anime.songs.length}曲)
+                  </Text>
+                  <VStack align="stretch" gap={3}>
+                    {anime.songs.map((song, index) => (
+                      <Box
+                        key={index}
+                        p={3}
+                        borderRadius="md"
+                        bg="gray.50"
+                        _dark={{ bg: 'gray.700' }}
+                      >
+                        <Badge colorScheme="purple" fontSize="xs" mb={1}>
+                          {song.type}
+                        </Badge>
+                        <Text fontWeight="medium" fontSize="sm">
+                          {song.trackName}
+                        </Text>
+                        <VStack
+                          align="start"
+                          gap={0.5}
+                          mt={1}
+                          fontSize="xs"
+                          color="gray.600"
+                          _dark={{ color: 'gray.400' }}
+                        >
+                          {song.artist && <Text>アーティスト: {song.artist}</Text>}
+                          {song.composer && <Text>作曲: {song.composer}</Text>}
+                          {song.lyrics && <Text>作詞: {song.lyrics}</Text>}
+                          {song.arranger && <Text>編曲: {song.arranger}</Text>}
+                        </VStack>
+                      </Box>
+                    ))}
+                  </VStack>
+                </Box>
+              </VStack>
+            </DialogBody>
+            <DialogFooter>
+              <Button onClick={onClose} variant="outline" width="full">
+                閉じる
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </DialogPositioner>
+      </Portal>
+    </DialogRoot>
+  );
+}
