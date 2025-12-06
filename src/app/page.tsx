@@ -83,6 +83,22 @@ function HomeContent() {
     router.push(`?${params.toString()}`);
   };
 
+  // Navigate to previous quarter
+  const goToPreviousQuarter = () => {
+    const currentIndex = quarters.indexOf(selectedQuarter);
+    if (currentIndex > 0) {
+      setSelectedQuarter(quarters[currentIndex - 1]);
+    }
+  };
+
+  // Navigate to next quarter
+  const goToNextQuarter = () => {
+    const currentIndex = quarters.indexOf(selectedQuarter);
+    if (currentIndex < quarters.length - 1) {
+      setSelectedQuarter(quarters[currentIndex + 1]);
+    }
+  };
+
   // Load anime data
   useEffect(() => {
     fetch('/data.json')
@@ -210,21 +226,41 @@ function HomeContent() {
               >
                 Select Quarter:
               </Text>
-              <NativeSelectRoot maxW={{ base: 'full', md: 'xs' }}>
-                <NativeSelectField
-                  value={selectedQuarter}
-                  onChange={(e) => setSelectedQuarter(e.target.value)}
-                  bg="white"
-                  color="gray.900"
-                  _dark={{ bg: 'gray.800', color: 'gray.100' }}
+              <Flex gap={2} align="center" maxW={{ base: 'full', md: '2xl' }}>
+                <Button
+                  onClick={goToPreviousQuarter}
+                  disabled={quarters.indexOf(selectedQuarter) === 0}
+                  variant="outline"
+                  size="md"
+                  aria-label="Previous quarter"
                 >
-                  {quarters.map((quarter) => (
-                    <option key={quarter} value={quarter}>
-                      {quarter}
-                    </option>
-                  ))}
-                </NativeSelectField>
-              </NativeSelectRoot>
+                  ←
+                </Button>
+                <NativeSelectRoot flex="1" maxW={{ base: 'full', md: 'xs' }}>
+                  <NativeSelectField
+                    value={selectedQuarter}
+                    onChange={(e) => setSelectedQuarter(e.target.value)}
+                    bg="white"
+                    color="gray.900"
+                    _dark={{ bg: 'gray.800', color: 'gray.100' }}
+                  >
+                    {quarters.map((quarter) => (
+                      <option key={quarter} value={quarter}>
+                        {quarter}
+                      </option>
+                    ))}
+                  </NativeSelectField>
+                </NativeSelectRoot>
+                <Button
+                  onClick={goToNextQuarter}
+                  disabled={quarters.indexOf(selectedQuarter) === quarters.length - 1}
+                  variant="outline"
+                  size="md"
+                  aria-label="Next quarter"
+                >
+                  →
+                </Button>
+              </Flex>
             </Box>
 
             {/* Anime List with Tabs */}
