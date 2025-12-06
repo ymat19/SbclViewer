@@ -25,14 +25,14 @@ let lastStorageValue: string | null = null;
 function getSnapshot(): Map<string, AnimeStatus> {
   try {
     const stored = localStorage.getItem(STORAGE_KEY);
-    
+
     // Return cached snapshot if storage hasn't changed
     if (stored === lastStorageValue && cachedSnapshot) {
       return cachedSnapshot;
     }
-    
+
     lastStorageValue = stored;
-    
+
     if (stored) {
       const parsed = JSON.parse(stored);
       cachedSnapshot = new Map(Object.entries(parsed));
@@ -41,7 +41,7 @@ function getSnapshot(): Map<string, AnimeStatus> {
   } catch (error) {
     console.error('Failed to parse anime statuses:', error);
   }
-  
+
   cachedSnapshot = new Map();
   return cachedSnapshot;
 }

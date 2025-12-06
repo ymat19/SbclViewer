@@ -2,6 +2,7 @@
 
 import { Box, Flex, Text, chakra } from '@chakra-ui/react';
 import { motion, PanInfo, useMotionValue, useTransform } from 'framer-motion';
+import { Check, X, RotateCcw } from 'lucide-react';
 
 import type { Anime, ViewTab, AnimeStatus } from '@/types/anime';
 
@@ -67,21 +68,36 @@ export function SwipeableAnimeItem({ anime, currentTab, onSetStatus }: Swipeable
     }
   };
 
-  // Get indicator text based on current tab
-  const getIndicatorText = () => {
+  // Get indicator content based on current tab
+  const getIndicatorContent = () => {
     if (currentTab === 'unselected') {
-      return { left: '← 未視聴', right: '視聴済み →' };
+      return {
+        left: { icon: X, text: '未視聴' },
+        right: { icon: Check, text: '視聴済み' },
+      };
     } else if (currentTab === 'watched') {
-      return { left: '← 未選択', right: '' };
+      return {
+        left: { icon: RotateCcw, text: '未選択' },
+        right: null,
+      };
     } else {
-      return { left: '', right: '未選択 →' };
+      return {
+        left: null,
+        right: { icon: RotateCcw, text: '未選択' },
+      };
     }
   };
 
-  const indicatorText = getIndicatorText();
+  const indicatorContent = getIndicatorContent();
 
   return (
-    <Box position="relative" overflow="hidden">
+    <MotionBox
+      position="relative"
+      overflow="hidden"
+      layout
+      initial={{ opacity: 1, height: 'auto' }}
+      exit={{ opacity: 0, height: 0, transition: { duration: 0.3 } }}
+    >
       {/* Background indicators */}
       <MotionBox
         style={{ background }}
@@ -92,23 +108,31 @@ export function SwipeableAnimeItem({ anime, currentTab, onSetStatus }: Swipeable
         justifyContent="space-between"
         px={6}
       >
-        {indicatorText.left && (
-          <Text color="white" fontWeight="semibold" fontSize="sm">
-            {indicatorText.left}
-          </Text>
+        {indicatorContent.left && (
+          <Flex gap={2} alignItems="center">
+            <indicatorContent.left.icon color="white" size={20} />
+            <Text color="white" fontWeight="semibold" fontSize="sm">
+              {indicatorContent.left.text}
+            </Text>
+          </Flex>
         )}
-        {indicatorText.right && (
-          <Text color="white" fontWeight="semibold" fontSize="sm">
-            {indicatorText.right}
-          </Text>
+        {indicatorContent.right && (
+          <Flex gap={2} alignItems="center">
+            <Text color="white" fontWeight="semibold" fontSize="sm">
+              {indicatorContent.right.text}
+            </Text>
+            <indicatorContent.right.icon color="white" size={20} />
+          </Flex>
         )}
       </MotionBox>
 
       {/* Swipeable content */}
       <MotionBox
         drag="x"
+        dragDirectionLock
         dragConstraints={{ left: 0, right: 0 }}
         dragElastic={0.7}
+        dragMomentum={false}
         onDragEnd={handleDragEnd}
         style={{ x }}
         position="relative"
@@ -128,6 +152,6 @@ export function SwipeableAnimeItem({ anime, currentTab, onSetStatus }: Swipeable
           </Box>
         </Flex>
       </MotionBox>
-    </Box>
+    </MotionBox>
   );
 }
