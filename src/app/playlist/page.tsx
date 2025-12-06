@@ -10,10 +10,9 @@ import {
   Flex,
   Card,
   Badge,
-  Spinner,
 } from '@chakra-ui/react';
 import Link from 'next/link';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 
 import { QuarterSelector } from '@/components/playlist/QuarterSelector';
 import { TrackConfirmation } from '@/components/playlist/TrackConfirmation';
@@ -23,6 +22,7 @@ import { useAnimeStatuses } from '@/hooks/useAnimeStatuses';
 import { usePlaylistDrafts } from '@/hooks/usePlaylistDrafts';
 import type { Anime } from '@/types/anime';
 import type { DraftTrack, PlaylistDraft } from '@/types/playlist';
+import animeDataJson from '@/../public/data.json';
 
 type Step = 'selector' | 'matcher' | 'confirmation';
 
@@ -31,25 +31,10 @@ export default function PlaylistPage() {
   const { statuses: animeStatuses } = useAnimeStatuses();
   const allDrafts = getAllDrafts();
 
-  const [animeData, setAnimeData] = useState<Anime[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
   const [currentStep, setCurrentStep] = useState<Step>('selector');
   const [selectedQuarter, setSelectedQuarter] = useState<string | null>(null);
   const [matchedTracks, setMatchedTracks] = useState<DraftTrack[]>([]);
-
-  // Load anime data
-  useEffect(() => {
-    fetch('/data.json')
-      .then((res) => res.json())
-      .then((data: Anime[]) => {
-        setAnimeData(data);
-        setIsLoading(false);
-      })
-      .catch((error) => {
-        console.error('Failed to load anime data:', error);
-        setIsLoading(false);
-      });
-  }, []);
+  const animeData = animeDataJson as Anime[];
 
   const handleSelectQuarter = (quarter: string) => {
     setSelectedQuarter(quarter);
@@ -94,17 +79,6 @@ export default function PlaylistPage() {
     // TODO: 個別の楽曲を再選択する機能（Phase 4で実装）
     console.log('Edit track at index:', index);
   };
-
-  if (isLoading) {
-    return (
-      <Flex minH="100vh" alignItems="center" justifyContent="center">
-        <VStack gap={4}>
-          <Spinner size="xl" color="blue.500" />
-          <Text color="fg.muted">Loading...</Text>
-        </VStack>
-      </Flex>
-    );
-  }
 
   const quarterAnimeList =
     selectedQuarter && currentStep !== 'selector'

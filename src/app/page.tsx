@@ -24,13 +24,14 @@ import {
 import { AnimatePresence } from 'framer-motion';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
-import { Suspense, useEffect, useState } from 'react';
+import { Suspense, useMemo, useState } from 'react';
 
 import { AnimeDetailDialog } from '@/components/AnimeDetailDialog';
 import { SwipeableAnimeItem } from '@/components/SwipeableAnimeItem';
 import { ColorModeButton } from '@/components/ui/color-mode';
 import { useAnimeStatuses } from '@/hooks/useAnimeStatuses';
 import type { Anime, Song, ViewTab, AnimeStatus } from '@/types/anime';
+import animeDataJson from '@/../public/data.json';
 
 const toaster = createToaster({
   placement: 'bottom',
@@ -41,12 +42,19 @@ const toaster = createToaster({
 function HomeContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const [animeData, setAnimeData] = useState<Anime[]>([]);
-  const [quarters, setQuarters] = useState<string[]>([]);
   const [currentTab, setCurrentTab] = useState<ViewTab>('unselected');
   const { statuses: animeStatuses, setStatus: setAnimeStatus } = useAnimeStatuses();
   const [selectedAnime, setSelectedAnime] = useState<Anime | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const animeData = animeDataJson as Anime[];
+  const quarters = useMemo(
+    () => Array.from(new Set(animeData.map((anime) => anime.quarter))).sort(),
+    [animeData],
+  );
+  const selectedQuarterParam = searchParams.get('quarter');
+  const defaultQuarter =
+    quarters.find((q) => q === '2010q1') ?? quarters[quarters.length - 1] ?? '';
+  const selectedQuarter = selectedQuarterParam ?? defaultQuarter;
 
   // Enhanced setStatus with undo functionality
   const handleSetStatus = (id: string, newStatus: AnimeStatus | null) => {
@@ -75,10 +83,6 @@ function HomeContent() {
       },
     });
   };
-  const [isLoading, setIsLoading] = useState(true);
-
-  // Get selected quarter from URL or use latest
-  const selectedQuarter = searchParams.get('quarter') || '';
 
   // Update URL when quarter changes
   const setSelectedQuarter = (quarter: string) => {
@@ -114,36 +118,6 @@ function HomeContent() {
     setSelectedAnime(null);
   };
 
-  // Load anime data
-  useEffect(() => {
-    fetch('/data.json')
-      .then((res) => res.json())
-      .then((data: Anime[]) => {
-        setAnimeData(data);
-
-        // Extract unique quarters and sort them
-        const uniqueQuarters = Array.from(new Set(data.map((anime) => anime.quarter))).sort();
-        setQuarters(uniqueQuarters);
-
-        // Set default to 2010q1 if not in URL
-        if (uniqueQuarters.length > 0 && !searchParams.get('quarter')) {
-          const params = new URLSearchParams(searchParams.toString());
-          const defaultQuarter = uniqueQuarters.includes('2010q1')
-            ? '2010q1'
-            : uniqueQuarters[uniqueQuarters.length - 1];
-          params.set('quarter', defaultQuarter as string);
-          router.replace(`?${params.toString()}`);
-        }
-
-        setIsLoading(false);
-      })
-      .catch((error) => {
-        console.error('Failed to load anime data:', error);
-        setIsLoading(false);
-      });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
   // Filter anime by selected quarter and exclude anime without songs
   const quarterAnime = animeData.filter(
     (anime) => anime.quarter === selectedQuarter && anime.songs.length > 0,
@@ -173,24 +147,11 @@ function HomeContent() {
   );
 
   // Count anime in each tab
-  const unwatchedCount = quarterAnime.filter(
-    (anime) => animeStatuses.get(anime.id) === 'unwatched',
-  ).length;
+  const unwatchedCount = quarterAnime.filter((anime) => animeStatuses.get(anime.id) === 'unwatched')
+    .length;
   const unselectedCount = quarterAnime.filter((anime) => !animeStatuses.has(anime.id)).length;
-  const watchedCount = quarterAnime.filter(
-    (anime) => animeStatuses.get(anime.id) === 'watched',
-  ).length;
-
-  if (isLoading) {
-    return (
-      <Flex minH="100vh" alignItems="center" justifyContent="center">
-        <VStack gap={4}>
-          <Spinner size="xl" color="blue.500" />
-          <Text color="fg.muted">Loading...</Text>
-        </VStack>
-      </Flex>
-    );
-  }
+  const watchedCount = quarterAnime.filter((anime) => animeStatuses.get(anime.id) === 'watched')
+    .length;
 
   return (
     <>
