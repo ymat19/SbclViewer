@@ -94,10 +94,11 @@ function HomeContent() {
         const uniqueQuarters = Array.from(new Set(data.map((anime) => anime.quarter))).sort();
         setQuarters(uniqueQuarters);
 
-        // Set default to most recent quarter if not in URL
+        // Set default to 2010q1 if not in URL
         if (uniqueQuarters.length > 0 && !searchParams.get('quarter')) {
           const params = new URLSearchParams(searchParams.toString());
-          params.set('quarter', uniqueQuarters[uniqueQuarters.length - 1] as string);
+          const defaultQuarter = uniqueQuarters.includes('2010q1') ? '2010q1' : uniqueQuarters[uniqueQuarters.length - 1];
+          params.set('quarter', defaultQuarter as string);
           router.replace(`?${params.toString()}`);
         }
 
