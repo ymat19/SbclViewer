@@ -84,20 +84,6 @@ export function AnimeDetailDialog({ anime, open, onClose }: AnimeDetailDialogPro
                   </Badge>
                 </Box>
 
-                {/* Image */}
-                {anime.imageUrl && (
-                  <Box>
-                    <Image
-                      src={anime.imageUrl}
-                      alt={anime.name}
-                      borderRadius="md"
-                      maxH="200px"
-                      objectFit="cover"
-                      width="100%"
-                    />
-                  </Box>
-                )}
-
                 {/* URL */}
                 {(officialUrl || shoboiUrl) && (
                   <Box>
@@ -120,7 +106,7 @@ export function AnimeDetailDialog({ anime, open, onClose }: AnimeDetailDialogPro
                           alignItems="center"
                           gap={1}
                         >
-                          <span>公式サイトを開く</span>
+                          <span>公式サイトを開く ({officialUrl})</span>
                           <ExternalLink size={14} />
                         </Link>
                       )}
