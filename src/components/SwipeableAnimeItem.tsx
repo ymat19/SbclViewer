@@ -1,5 +1,7 @@
 'use client';
 
+import { useRef } from 'react';
+
 import { Box, Flex, Text, chakra } from '@chakra-ui/react';
 import { motion, PanInfo, useMotionValue, useTransform } from 'framer-motion';
 import { Check, X, RotateCcw } from 'lucide-react';
@@ -22,6 +24,7 @@ export function SwipeableAnimeItem({
   onClickAnime,
 }: SwipeableAnimeItemProps) {
   const x = useMotionValue(0);
+  const dragDistance = useRef(0);
 
   // Set background colors based on current tab
   const getBackgroundTransform = () => {
@@ -51,6 +54,7 @@ export function SwipeableAnimeItem({
 
   const handleDragEnd = (_event: unknown, info: PanInfo) => {
     const threshold = 100;
+    dragDistance.current = info.offset.x;
 
     if (currentTab === 'unselected') {
       if (info.offset.x > threshold) {
@@ -75,7 +79,8 @@ export function SwipeableAnimeItem({
   };
 
   const handleClick = () => {
-    if (onClickAnime) {
+    // モーダルを開くのはドラッグ（スワイプ）がほぼ発生していないときだけに限定
+    if (onClickAnime && Math.abs(dragDistance.current) < 10) {
       onClickAnime(anime);
     }
   };
@@ -145,6 +150,9 @@ export function SwipeableAnimeItem({
         dragConstraints={{ left: 0, right: 0 }}
         dragElastic={0.7}
         dragMomentum={false}
+        onPointerDown={() => {
+          dragDistance.current = 0;
+        }}
         onDragEnd={handleDragEnd}
         onTap={handleClick}
         style={{ x }}
