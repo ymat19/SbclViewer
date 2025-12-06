@@ -27,6 +27,20 @@ interface AnimeDetailDialogProps {
 export function AnimeDetailDialog({ anime, open, onClose }: AnimeDetailDialogProps) {
   if (!anime) return null;
 
+  const getOfficialUrlFromImage = (imageUrl?: string | null) => {
+    if (!imageUrl) return null;
+    const match = imageUrl.match(/linkimg\\.php\?url=(.+)$/);
+    if (!match) return null;
+    try {
+      return decodeURIComponent(match[1]);
+    } catch (_error) {
+      return null;
+    }
+  };
+
+  const officialUrl = getOfficialUrlFromImage(anime.imageUrl ?? undefined);
+  const shoboiUrl = anime.url;
+
   return (
     <DialogRoot open={open} onOpenChange={(e) => !e.open && onClose()} size="lg" placement="center">
       <Portal>
@@ -84,30 +98,47 @@ export function AnimeDetailDialog({ anime, open, onClose }: AnimeDetailDialogPro
                 )}
 
                 {/* URL */}
-                {anime.url && (
+                {(officialUrl || shoboiUrl) && (
                   <Box>
-                  <Text
-                    fontSize="sm"
-                    fontWeight="medium"
-                    color="fg.muted"
-                  >
-                    詳細情報
-                  </Text>
-                    <Link
-                      href={anime.url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      color="blue.500"
-                      _dark={{ color: 'blue.300' }}
-                      display="flex"
-                      alignItems="center"
-                      gap={1}
-                      mt={1}
+                    <Text
                       fontSize="sm"
+                      fontWeight="medium"
+                      color="fg.muted"
                     >
-                      <span>公式サイトを開く</span>
-                      <ExternalLink size={14} />
-                    </Link>
+                      詳細情報
+                    </Text>
+                    <VStack align="start" gap={1} mt={1} fontSize="sm">
+                      {officialUrl && (
+                        <Link
+                          href={officialUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          color="blue.500"
+                          _dark={{ color: 'blue.300' }}
+                          display="flex"
+                          alignItems="center"
+                          gap={1}
+                        >
+                          <span>公式サイトを開く</span>
+                          <ExternalLink size={14} />
+                        </Link>
+                      )}
+                      {shoboiUrl && (
+                        <Link
+                          href={shoboiUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          color="blue.500"
+                          _dark={{ color: 'blue.300' }}
+                          display="flex"
+                          alignItems="center"
+                          gap={1}
+                        >
+                          <span>しょぼいカレンダーで見る</span>
+                          <ExternalLink size={14} />
+                        </Link>
+                      )}
+                    </VStack>
                   </Box>
                 )}
 
