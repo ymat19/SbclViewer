@@ -7,13 +7,17 @@ import {
   DialogTitle,
   DialogBody,
   DialogFooter,
-  DialogCloseTrigger,
   DialogBackdrop,
   DialogPositioner,
   Button,
   IconButton,
+  Box,
+  VStack,
+  Text,
+  Badge,
+  Link,
+  Portal,
 } from '@chakra-ui/react';
-import { Box, VStack, Text, Badge, Link, Portal } from '@chakra-ui/react';
 import { ExternalLink, X } from 'lucide-react';
 
 import type { Anime } from '@/types/anime';
@@ -34,7 +38,7 @@ export function AnimeDetailDialog({ anime, open, onClose }: AnimeDetailDialogPro
       const encoded = url.searchParams.get('url');
       if (!encoded) return null;
       return decodeURIComponent(encoded);
-    } catch (_error) {
+    } catch {
       return null;
     }
   };

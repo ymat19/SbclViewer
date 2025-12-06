@@ -25,8 +25,8 @@ import { AnimatePresence } from 'framer-motion';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Suspense, useEffect, useState } from 'react';
 
-import { SwipeableAnimeItem } from '@/components/SwipeableAnimeItem';
 import { AnimeDetailDialog } from '@/components/AnimeDetailDialog';
+import { SwipeableAnimeItem } from '@/components/SwipeableAnimeItem';
 import { ColorModeButton } from '@/components/ui/color-mode';
 import { useAnimeStatuses } from '@/hooks/useAnimeStatuses';
 import type { Anime, Song, ViewTab, AnimeStatus } from '@/types/anime';

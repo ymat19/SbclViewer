@@ -1,10 +1,9 @@
 'use client';
 
-import { useRef } from 'react';
-
 import { Box, Flex, Text, chakra } from '@chakra-ui/react';
 import { motion, PanInfo, useMotionValue, useTransform } from 'framer-motion';
-import { Check, X, RotateCcw } from 'lucide-react';
+import { Check, RotateCcw, X } from 'lucide-react';
+import { useRef } from 'react';
 
 import type { Anime, ViewTab, AnimeStatus } from '@/types/anime';
 
