@@ -2,7 +2,8 @@
 
 import { Box, Flex, Text, chakra } from '@chakra-ui/react';
 import { motion, PanInfo, useMotionValue, useTransform } from 'framer-motion';
-import { Check, X, RotateCcw } from 'lucide-react';
+import { Check, RotateCcw, X } from 'lucide-react';
+import { useRef } from 'react';
 
 import type { Anime, ViewTab, AnimeStatus } from '@/types/anime';
 
@@ -10,12 +11,19 @@ interface SwipeableAnimeItemProps {
   anime: Anime;
   currentTab: ViewTab;
   onSetStatus: (id: string, status: AnimeStatus | null) => void;
+  onClickAnime?: (anime: Anime) => void;
 }
 
 const MotionBox = chakra(motion.div);
 
-export function SwipeableAnimeItem({ anime, currentTab, onSetStatus }: SwipeableAnimeItemProps) {
+export function SwipeableAnimeItem({
+  anime,
+  currentTab,
+  onSetStatus,
+  onClickAnime,
+}: SwipeableAnimeItemProps) {
   const x = useMotionValue(0);
+  const dragDistance = useRef(0);
 
   // Set background colors based on current tab
   const getBackgroundTransform = () => {
@@ -45,6 +53,7 @@ export function SwipeableAnimeItem({ anime, currentTab, onSetStatus }: Swipeable
 
   const handleDragEnd = (_event: unknown, info: PanInfo) => {
     const threshold = 100;
+    dragDistance.current = info.offset.x;
 
     if (currentTab === 'unselected') {
       if (info.offset.x > threshold) {
@@ -65,6 +74,13 @@ export function SwipeableAnimeItem({ anime, currentTab, onSetStatus }: Swipeable
         // Right swipe -> unselected
         onSetStatus(anime.id, null);
       }
+    }
+  };
+
+  const handleClick = () => {
+    // モーダルを開くのはドラッグ（スワイプ）がほぼ発生していないときだけに限定
+    if (onClickAnime && Math.abs(dragDistance.current) < 10) {
+      onClickAnime(anime);
     }
   };
 
@@ -133,7 +149,11 @@ export function SwipeableAnimeItem({ anime, currentTab, onSetStatus }: Swipeable
         dragConstraints={{ left: 0, right: 0 }}
         dragElastic={0.7}
         dragMomentum={false}
+        onPointerDown={() => {
+          dragDistance.current = 0;
+        }}
         onDragEnd={handleDragEnd}
+        onTap={handleClick}
         style={{ x }}
         position="relative"
         bg="white"
@@ -146,7 +166,7 @@ export function SwipeableAnimeItem({ anime, currentTab, onSetStatus }: Swipeable
             <Text fontWeight="medium" wordBreak="break-word">
               {anime.name}
             </Text>
-            <Text fontSize="sm" color="gray.600" _dark={{ color: 'gray.400' }}>
+            <Text fontSize="sm" color="fg.muted">
               {anime.songs.length} song{anime.songs.length > 1 ? 's' : ''}
             </Text>
           </Box>
