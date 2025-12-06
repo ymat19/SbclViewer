@@ -1,9 +1,4 @@
-import {
-  createSystem,
-  defaultConfig,
-  defineConfig,
-  defineSemanticTokens,
-} from '@chakra-ui/react';
+import { createSystem, defaultConfig, defineConfig, defineSemanticTokens } from '@chakra-ui/react';
 
 const semanticTokens = defineSemanticTokens({
   colors: {
@@ -11,6 +6,23 @@ const semanticTokens = defineSemanticTokens({
     'fg.muted': { value: { base: '{colors.gray.700}', _dark: '{colors.gray.300}' } },
   },
 });
+
+const dialogRecipe = defaultConfig.theme?.slotRecipes?.dialog;
+
+if (!dialogRecipe || !dialogRecipe.base) {
+  throw new Error('dialog slot recipe is not available in defaultConfig');
+}
+
+const dialogOverride = {
+  ...dialogRecipe,
+  base: {
+    ...dialogRecipe.base,
+    content: { ...dialogRecipe.base.content, color: 'fg.default' },
+    header: { ...dialogRecipe.base.header, color: 'fg.default' },
+    title: { ...dialogRecipe.base.title, color: 'inherit' },
+    body: { ...dialogRecipe.base.body, color: 'fg.default' },
+  },
+};
 
 const config = defineConfig({
   globalCss: {
@@ -24,14 +36,7 @@ const config = defineConfig({
   theme: {
     semanticTokens,
     slotRecipes: {
-      dialog: {
-        base: {
-          content: { color: 'fg.default' },
-          header: { color: 'fg.default' },
-          title: { color: 'inherit' },
-          body: { color: 'fg.default' },
-        },
-      },
+      dialog: dialogOverride,
     },
   },
 });

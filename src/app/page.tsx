@@ -185,9 +185,7 @@ function HomeContent() {
       <Flex minH="100vh" alignItems="center" justifyContent="center">
         <VStack gap={4}>
           <Spinner size="xl" color="blue.500" />
-          <Text color="fg.muted">
-            Loading...
-          </Text>
+          <Text color="fg.muted">Loading...</Text>
         </VStack>
       </Flex>
     );
@@ -309,9 +307,7 @@ function HomeContent() {
                   <Card.Root maxH="md" overflowY="auto" bg="white" _dark={{ bg: 'gray.800' }}>
                     {filteredAnime.length === 0 ? (
                       <Card.Body>
-                        <Text color="fg.muted">
-                          このクォーターに該当する作品がありません。
-                        </Text>
+                        <Text color="fg.muted">このクォーターに該当する作品がありません。</Text>
                       </Card.Body>
                     ) : (
                       <VStack gap={0} align="stretch" divideY="1px">
@@ -397,9 +393,7 @@ export default function Home() {
         <Flex minH="100vh" alignItems="center" justifyContent="center">
           <VStack gap={4}>
             <Spinner size="xl" color="blue.500" />
-            <Text color="fg.muted">
-              Loading...
-            </Text>
+            <Text color="fg.muted">Loading...</Text>
           </VStack>
         </Flex>
       }

@@ -76,11 +76,7 @@ export function AnimeDetailDialog({ anime, open, onClose }: AnimeDetailDialogPro
               <VStack align="stretch" gap={4}>
                 {/* Quarter Info */}
                 <Box>
-                  <Text
-                    fontSize="sm"
-                    fontWeight="medium"
-                    color="fg.muted"
-                  >
+                  <Text fontSize="sm" fontWeight="medium" color="fg.muted">
                     クォータ
                   </Text>
                   <Badge colorScheme="blue" mt={1}>
@@ -91,11 +87,7 @@ export function AnimeDetailDialog({ anime, open, onClose }: AnimeDetailDialogPro
                 {/* URL */}
                 {(officialUrl || shoboiUrl) && (
                   <Box>
-                    <Text
-                      fontSize="sm"
-                      fontWeight="medium"
-                      color="fg.muted"
-                    >
+                    <Text fontSize="sm" fontWeight="medium" color="fg.muted">
                       詳細情報
                     </Text>
                     <VStack align="start" gap={1} mt={1} fontSize="sm">
@@ -135,12 +127,7 @@ export function AnimeDetailDialog({ anime, open, onClose }: AnimeDetailDialogPro
 
                 {/* Songs */}
                 <Box>
-                  <Text
-                    fontSize="sm"
-                    fontWeight="medium"
-                    color="fg.muted"
-                    mb={2}
-                  >
+                  <Text fontSize="sm" fontWeight="medium" color="fg.muted" mb={2}>
                     楽曲一覧 ({anime.songs.length}曲)
                   </Text>
                   <VStack align="stretch" gap={3}>
@@ -158,13 +145,7 @@ export function AnimeDetailDialog({ anime, open, onClose }: AnimeDetailDialogPro
                         <Text fontWeight="medium" fontSize="sm">
                           {song.trackName}
                         </Text>
-                        <VStack
-                          align="start"
-                          gap={0.5}
-                          mt={1}
-                          fontSize="xs"
-                          color="fg.muted"
-                        >
+                        <VStack align="start" gap={0.5} mt={1} fontSize="xs" color="fg.muted">
                           {song.artist && <Text>アーティスト: {song.artist}</Text>}
                           {song.composer && <Text>作曲: {song.composer}</Text>}
                           {song.lyrics && <Text>作詞: {song.lyrics}</Text>}
