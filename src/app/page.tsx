@@ -29,6 +29,7 @@ import { AnimatePresence } from 'framer-motion';
 import { SwipeableAnimeItem } from '@/components/SwipeableAnimeItem';
 import { useAnimeStatuses } from '@/hooks/useAnimeStatuses';
 import type { Anime, Song, ViewTab, AnimeStatus } from '@/types/anime';
+import { ColorModeButton } from '@/components/ui/color-mode';
 
 const toaster = createToaster({
   placement: 'bottom',
@@ -183,13 +184,15 @@ function HomeContent() {
       <Box minH="100vh" bg="gray.50" _dark={{ bg: 'gray.900' }} py={4} px={4}>
         <Container maxW="6xl">
         <VStack gap={6} align="stretch">
-          <Heading
-            as="h1"
-            size={{ base: 'lg', md: '2xl' }}
-            textAlign={{ base: 'center', md: 'left' }}
-          >
-            Anime Song Playlist Creator
-          </Heading>
+          <Flex justify="space-between" align="center" gap={4}>
+            <Heading
+              as="h1"
+              size={{ base: 'lg', md: '2xl' }}
+            >
+              Anime Song Playlist Creator
+            </Heading>
+            <ColorModeButton />
+          </Flex>
 
           {/* Quarter Selector */}
           <Box>
