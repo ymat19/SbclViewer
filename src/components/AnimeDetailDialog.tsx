@@ -60,8 +60,7 @@ export function AnimeDetailDialog({ anime, open, onClose }: AnimeDetailDialogPro
                   <Text
                     fontSize="sm"
                     fontWeight="medium"
-                    color="gray.600"
-                    _dark={{ color: 'gray.400' }}
+                    color="fg.muted"
                   >
                     クォータ
                   </Text>
@@ -87,14 +86,13 @@ export function AnimeDetailDialog({ anime, open, onClose }: AnimeDetailDialogPro
                 {/* URL */}
                 {anime.url && (
                   <Box>
-                    <Text
-                      fontSize="sm"
-                      fontWeight="medium"
-                      color="gray.600"
-                      _dark={{ color: 'gray.400' }}
-                    >
-                      詳細情報
-                    </Text>
+                  <Text
+                    fontSize="sm"
+                    fontWeight="medium"
+                    color="fg.muted"
+                  >
+                    詳細情報
+                  </Text>
                     <Link
                       href={anime.url}
                       target="_blank"
@@ -118,8 +116,7 @@ export function AnimeDetailDialog({ anime, open, onClose }: AnimeDetailDialogPro
                   <Text
                     fontSize="sm"
                     fontWeight="medium"
-                    color="gray.600"
-                    _dark={{ color: 'gray.400' }}
+                    color="fg.muted"
                     mb={2}
                   >
                     楽曲一覧 ({anime.songs.length}曲)
@@ -144,8 +141,7 @@ export function AnimeDetailDialog({ anime, open, onClose }: AnimeDetailDialogPro
                           gap={0.5}
                           mt={1}
                           fontSize="xs"
-                          color="gray.600"
-                          _dark={{ color: 'gray.400' }}
+                          color="fg.muted"
                         >
                           {song.artist && <Text>アーティスト: {song.artist}</Text>}
                           {song.composer && <Text>作曲: {song.composer}</Text>}

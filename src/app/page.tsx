@@ -185,7 +185,7 @@ function HomeContent() {
       <Flex minH="100vh" alignItems="center" justifyContent="center">
         <VStack gap={4}>
           <Spinner size="xl" color="blue.500" />
-          <Text color="gray.600" _dark={{ color: 'gray.400' }}>
+          <Text color="fg.muted">
             Loading...
           </Text>
         </VStack>
@@ -219,12 +219,7 @@ function HomeContent() {
         <Container maxW="6xl">
           <VStack gap={6} align="stretch">
             <Flex justify="space-between" align="center" gap={4}>
-              <Heading
-                as="h1"
-                size={{ base: 'lg', md: '2xl' }}
-                color="gray.900"
-                _dark={{ color: 'white' }}
-              >
+              <Heading as="h1" size={{ base: 'lg', md: '2xl' }}>
                 Anime Song Playlist Creator
               </Heading>
               <ColorModeButton />
@@ -232,13 +227,7 @@ function HomeContent() {
 
             {/* Quarter Selector */}
             <Box>
-              <Text
-                fontSize="sm"
-                fontWeight="medium"
-                mb={2}
-                color="gray.700"
-                _dark={{ color: 'gray.300' }}
-              >
+              <Text fontSize="sm" fontWeight="medium" mb={2} color="fg.muted">
                 Select Quarter:
               </Text>
               <Flex gap={2} align="center" maxW={{ base: 'full', md: '2xl' }}>
@@ -256,8 +245,8 @@ function HomeContent() {
                     value={selectedQuarter}
                     onChange={(e) => setSelectedQuarter(e.target.value)}
                     bg="white"
-                    color="gray.900"
-                    _dark={{ bg: 'gray.800', color: 'gray.100' }}
+                    color="fg.default"
+                    _dark={{ bg: 'gray.800', color: 'fg.default' }}
                   >
                     {quarters.map((quarter) => (
                       <option key={quarter} value={quarter}>
@@ -280,13 +269,7 @@ function HomeContent() {
 
             {/* Anime List with Tabs */}
             <Box overflow="hidden">
-              <Heading
-                as="h2"
-                size={{ base: 'md', md: 'lg' }}
-                mb={4}
-                color="gray.900"
-                _dark={{ color: 'white' }}
-              >
+              <Heading as="h2" size={{ base: 'md', md: 'lg' }} mb={4}>
                 Anime List
               </Heading>
               <Tabs.Root
@@ -326,7 +309,7 @@ function HomeContent() {
                   <Card.Root maxH="md" overflowY="auto" bg="white" _dark={{ bg: 'gray.800' }}>
                     {filteredAnime.length === 0 ? (
                       <Card.Body>
-                        <Text color="gray.600" _dark={{ color: 'gray.400' }}>
+                        <Text color="fg.muted">
                           このクォーターに該当する作品がありません。
                         </Text>
                       </Card.Body>
@@ -353,12 +336,7 @@ function HomeContent() {
             {/* Songs List */}
             <Box>
               <Flex justify="space-between" align="center" mb={4} flexWrap="wrap" gap={2}>
-                <Heading
-                  as="h2"
-                  size={{ base: 'md', md: 'lg' }}
-                  color="gray.900"
-                  _dark={{ color: 'white' }}
-                >
+                <Heading as="h2" size={{ base: 'md', md: 'lg' }}>
                   Songs from Watched Anime
                 </Heading>
                 <Badge
@@ -374,7 +352,7 @@ function HomeContent() {
               <Card.Root bg="white" _dark={{ bg: 'gray.800' }}>
                 {allSongs.length === 0 ? (
                   <Card.Body>
-                    <Text color="gray.600" _dark={{ color: 'gray.400' }}>
+                    <Text color="fg.muted">
                       Select anime to see their songs. Swipe right to add, swipe left to remove.
                     </Text>
                   </Card.Body>
@@ -393,13 +371,7 @@ function HomeContent() {
                         <Text fontWeight="medium" mb={1}>
                           {song.trackName}
                         </Text>
-                        <VStack
-                          align="start"
-                          gap={0}
-                          fontSize="sm"
-                          color="gray.600"
-                          _dark={{ color: 'gray.400' }}
-                        >
+                        <VStack align="start" gap={0} fontSize="sm" color="fg.muted">
                           {song.artist && <Text>Artist: {song.artist}</Text>}
                           {song.composer && <Text>Composer: {song.composer}</Text>}
                           {song.lyrics && <Text>Lyrics: {song.lyrics}</Text>}
@@ -425,7 +397,7 @@ export default function Home() {
         <Flex minH="100vh" alignItems="center" justifyContent="center">
           <VStack gap={4}>
             <Spinner size="xl" color="blue.500" />
-            <Text color="gray.600" _dark={{ color: 'gray.400' }}>
+            <Text color="fg.muted">
               Loading...
             </Text>
           </VStack>

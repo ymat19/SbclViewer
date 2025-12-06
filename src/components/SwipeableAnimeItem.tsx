@@ -167,7 +167,7 @@ export function SwipeableAnimeItem({
             <Text fontWeight="medium" wordBreak="break-word">
               {anime.name}
             </Text>
-            <Text fontSize="sm" color="gray.600" _dark={{ color: 'gray.400' }}>
+            <Text fontSize="sm" color="fg.muted">
               {anime.songs.length} song{anime.songs.length > 1 ? 's' : ''}
             </Text>
           </Box>
