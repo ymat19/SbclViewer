@@ -29,10 +29,11 @@ export function AnimeDetailDialog({ anime, open, onClose }: AnimeDetailDialogPro
 
   const getOfficialUrlFromImage = (imageUrl?: string | null) => {
     if (!imageUrl) return null;
-    const match = imageUrl.match(/linkimg\\.php\?url=(.+)$/);
-    if (!match) return null;
     try {
-      return decodeURIComponent(match[1]);
+      const url = new URL(imageUrl);
+      const encoded = url.searchParams.get('url');
+      if (!encoded) return null;
+      return decodeURIComponent(encoded);
     } catch (_error) {
       return null;
     }
