@@ -23,6 +23,7 @@ import {
 } from '@chakra-ui/react';
 import { AnimatePresence } from 'framer-motion';
 import { useRouter, useSearchParams } from 'next/navigation';
+import Link from 'next/link';
 import { Suspense, useEffect, useState } from 'react';
 
 import { AnimeDetailDialog } from '@/components/AnimeDetailDialog';
@@ -220,7 +221,14 @@ function HomeContent() {
               <Heading as="h1" size={{ base: 'lg', md: '2xl' }}>
                 Anime Song Playlist Creator
               </Heading>
-              <ColorModeButton />
+              <Flex gap={2} align="center">
+                <Link href="/playlist" passHref legacyBehavior>
+                  <Button as="a" colorScheme="blue" size={{ base: 'sm', md: 'md' }}>
+                    プレイリストを作成
+                  </Button>
+                </Link>
+                <ColorModeButton />
+              </Flex>
             </Flex>
 
             {/* Quarter Selector */}

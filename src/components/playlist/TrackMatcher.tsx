@@ -1,0 +1,320 @@
+import {
+  Box,
+  Button,
+  Card,
+  Flex,
+  Heading,
+  Text,
+  VStack,
+  Badge,
+  Spinner,
+  HStack,
+  RadioGroup,
+  ProgressRoot,
+} from '@chakra-ui/react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { useEffect, useState } from 'react';
+
+import { useTrackSearch } from '@/hooks/useTrackSearch';
+import type { TrackSearchResult } from '@/services/music/types';
+import type { Anime, Song } from '@/types/anime';
+import type { DraftTrack } from '@/types/playlist';
+
+interface TrackMatcherProps {
+  quarter: string;
+  animeList: Anime[];
+  onComplete: (tracks: DraftTrack[]) => void;
+  onCancel: () => void;
+  initialTracks?: DraftTrack[];
+}
+
+const MotionBox = motion.create(Box);
+const MotionCard = motion.create(Card.Root);
+
+export function TrackMatcher({
+  quarter,
+  animeList,
+  onComplete,
+  onCancel,
+  initialTracks = [],
+}: TrackMatcherProps) {
+  const { searchTrack, canAutoMatch, getAutoMatchResult } = useTrackSearch();
+
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [matchedTracks, setMatchedTracks] = useState<DraftTrack[]>(initialTracks);
+  const [isSearching, setIsSearching] = useState(false);
+  const [searchResults, setSearchResults] = useState<TrackSearchResult[]>([]);
+  const [selectedTrackId, setSelectedTrackId] = useState<string | null>(null);
+
+  // 全楽曲リストを作成
+  const allSongs = animeList.flatMap((anime) =>
+    anime.songs.map((song) => ({
+      animeId: anime.id,
+      animeName: anime.name,
+      song,
+    })),
+  );
+
+  const totalSongs = allSongs.length;
+  const currentSong = allSongs[currentIndex];
+
+  // 楽曲検索を実行
+  useEffect(() => {
+    if (!currentSong) return;
+
+    const performSearch = async () => {
+      setIsSearching(true);
+      setSearchResults([]);
+      setSelectedTrackId(null);
+
+      const results = await searchTrack(currentSong.song);
+      setSearchResults(results);
+
+      // 自動マッチング可能な場合は自動選択
+      if (canAutoMatch(results)) {
+        const autoMatch = getAutoMatchResult(results);
+        if (autoMatch) {
+          setSelectedTrackId(autoMatch.id);
+        }
+      }
+
+      setIsSearching(false);
+    };
+
+    performSearch();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentIndex]);
+
+  const handleNext = () => {
+    if (!currentSong) return;
+
+    const selectedTrack = searchResults.find((r) => r.id === selectedTrackId);
+    const draftTrack: DraftTrack = {
+      animeId: currentSong.animeId,
+      animeName: currentSong.animeName,
+      song: currentSong.song,
+      matchStatus: selectedTrack
+        ? canAutoMatch(searchResults) && selectedTrack.confidence === 'exact'
+          ? 'auto'
+          : 'manual'
+        : 'skipped',
+      selectedTrack,
+      candidates: searchResults,
+    };
+
+    setMatchedTracks([...matchedTracks, draftTrack]);
+
+    if (currentIndex < totalSongs - 1) {
+      setCurrentIndex(currentIndex + 1);
+    } else {
+      // 完了
+      onComplete([...matchedTracks, draftTrack]);
+    }
+  };
+
+  const handleSkip = () => {
+    if (!currentSong) return;
+
+    const draftTrack: DraftTrack = {
+      animeId: currentSong.animeId,
+      animeName: currentSong.animeName,
+      song: currentSong.song,
+      matchStatus: 'skipped',
+      candidates: searchResults,
+    };
+
+    setMatchedTracks([...matchedTracks, draftTrack]);
+
+    if (currentIndex < totalSongs - 1) {
+      setCurrentIndex(currentIndex + 1);
+    } else {
+      onComplete([...matchedTracks, draftTrack]);
+    }
+  };
+
+  if (!currentSong) {
+    return <Text color="fg.muted">楽曲がありません</Text>;
+  }
+
+  const progress = ((currentIndex + 1) / totalSongs) * 100;
+
+  return (
+    <VStack gap={6} align="stretch">
+      {/* 進捗 */}
+      <MotionBox
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.3 }}
+      >
+        <Flex justify="space-between" mb={2} align="center">
+          <Text fontSize="sm" fontWeight="medium" color="gray.400">
+            進捗
+          </Text>
+          <Text fontSize="md" fontWeight="semibold" color="gray.300">
+            {currentIndex + 1} / {totalSongs}
+          </Text>
+        </Flex>
+        <ProgressRoot value={progress} colorScheme="green" borderRadius="md" h="6px" />
+      </MotionBox>
+
+      {/* 楽曲情報 */}
+      <MotionCard
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.3, delay: 0.1 }}
+        bg="gray.800"
+        borderWidth="1px"
+        borderColor="gray.700"
+      >
+        <Card.Header>
+          <Heading size="sm" color="gray.300" fontWeight="semibold">
+            楽曲情報
+          </Heading>
+        </Card.Header>
+        <Card.Body>
+          <VStack align="start" gap={2}>
+            <Flex gap={2} flexWrap="wrap">
+              <Badge colorScheme="gray" fontSize="xs">
+                {currentSong.animeName}
+              </Badge>
+              <Badge colorScheme="gray" fontSize="xs">
+                {currentSong.song.type}
+              </Badge>
+            </Flex>
+            <Text fontWeight="semibold" fontSize="lg" color="white">
+              {currentSong.song.trackName}
+            </Text>
+            {currentSong.song.artist && (
+              <Text fontSize="sm" color="gray.400">
+                アーティスト: {currentSong.song.artist}
+              </Text>
+            )}
+          </VStack>
+        </Card.Body>
+      </MotionCard>
+
+      {/* 検索結果 */}
+      <MotionCard
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.3, delay: 0.2 }}
+        bg="gray.800"
+        borderWidth="1px"
+        borderColor="gray.700"
+      >
+        <Card.Header>
+          <Flex justify="space-between" align="center">
+            <Heading size="sm" color="gray.300" fontWeight="semibold">
+              マッチング結果
+            </Heading>
+            {isSearching && <Spinner size="sm" color="gray.400" />}
+          </Flex>
+        </Card.Header>
+        <Card.Body>
+          {isSearching ? (
+            <Flex justify="center" py={6} direction="column" align="center" gap={3}>
+              <Spinner size="lg" color="gray.400" />
+              <Text color="gray.400" fontSize="sm">
+                検索中...
+              </Text>
+            </Flex>
+          ) : searchResults.length === 0 ? (
+            <Box py={6} textAlign="center">
+              <Text color="gray.400">楽曲が見つかりませんでした</Text>
+            </Box>
+          ) : (
+            <VStack align="stretch" gap={3}>
+              {canAutoMatch(searchResults) && (
+                <Badge colorScheme="green" alignSelf="start" fontSize="sm">
+                  完全一致が見つかりました
+                </Badge>
+              )}
+              {!canAutoMatch(searchResults) && searchResults.length > 0 && (
+                <Badge colorScheme="yellow" alignSelf="start" fontSize="sm">
+                  複数の候補が見つかりました
+                </Badge>
+              )}
+
+              <RadioGroup.Root value={selectedTrackId || undefined}>
+                <VStack align="stretch" gap={2}>
+                  <AnimatePresence>
+                    {searchResults.map((result, index) => (
+                      <MotionCard
+                        key={result.id}
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -10 }}
+                        transition={{ duration: 0.2, delay: index * 0.03 }}
+                        variant={selectedTrackId === result.id ? 'elevated' : 'outline'}
+                        borderWidth="1px"
+                        borderColor={selectedTrackId === result.id ? 'green.600' : 'gray.700'}
+                        bg={selectedTrackId === result.id ? 'green.950' : 'gray.800'}
+                        onClick={() => setSelectedTrackId(result.id)}
+                        cursor="pointer"
+                        _hover={{
+                          borderColor: selectedTrackId === result.id ? 'green.500' : 'gray.600',
+                        }}
+                      >
+                        <Card.Body py={3}>
+                          <Flex gap={3} align="start">
+                            <RadioGroup.Item
+                              value={result.id}
+                              onChange={() => setSelectedTrackId(result.id)}
+                            />
+                            <Box flex="1">
+                              <Flex gap={2} align="center" mb={1} flexWrap="wrap">
+                                <Text
+                                  fontWeight="medium"
+                                  color={selectedTrackId === result.id ? 'white' : 'gray.200'}
+                                  fontSize="sm"
+                                >
+                                  {result.name}
+                                </Text>
+                                {result.confidence === 'exact' && (
+                                  <Badge colorScheme="green" size="sm">
+                                    完全一致
+                                  </Badge>
+                                )}
+                              </Flex>
+                              <Text fontSize="sm" color="gray.400">
+                                {result.artist}
+                                {result.album && ` • ${result.album}`}
+                              </Text>
+                            </Box>
+                          </Flex>
+                        </Card.Body>
+                      </MotionCard>
+                    ))}
+                  </AnimatePresence>
+                </VStack>
+              </RadioGroup.Root>
+            </VStack>
+          )}
+        </Card.Body>
+      </MotionCard>
+
+      {/* アクション */}
+      <HStack justify="space-between">
+        <Button variant="outline" onClick={onCancel} borderColor="gray.600" color="gray.300">
+          キャンセル
+        </Button>
+        <HStack>
+          <Button variant="outline" onClick={handleSkip} borderColor="gray.600" color="gray.300">
+            スキップ
+          </Button>
+          <Button
+            colorScheme="green"
+            onClick={handleNext}
+            disabled={!selectedTrackId}
+            _disabled={{
+              opacity: 0.5,
+              cursor: 'not-allowed',
+            }}
+          >
+            {currentIndex < totalSongs - 1 ? '次へ' : '完了'}
+          </Button>
+        </HStack>
+      </HStack>
+    </VStack>
+  );
+}
