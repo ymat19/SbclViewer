@@ -13,18 +13,16 @@ const semanticTokens = defineSemanticTokens({
 });
 
 const config = defineConfig({
+  globalCss: {
+    body: {
+      color: 'fg.default',
+    },
+    'h1, h2, h3, h4, h5, h6': {
+      color: 'fg.default',
+    },
+  },
   theme: {
     semanticTokens,
-    styles: {
-      global: {
-        body: {
-          color: 'fg.default',
-        },
-        'h1, h2, h3, h4, h5, h6': {
-          color: 'fg.default',
-        },
-      },
-    },
     slotRecipes: {
       dialog: {
         base: {
