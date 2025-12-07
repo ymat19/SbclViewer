@@ -85,6 +85,8 @@ export function TrackMatcher({
   const [isSearching, setIsSearching] = useState(false);
   const [searchResults, setSearchResults] = useState<TrackSearchResult[]>([]);
   const [selectedTrackId, setSelectedTrackId] = useState<string | null>(null);
+  const [skippedTrackName, setSkippedTrackName] = useState<string | null>(null);
+  const [isNavigatingBack, setIsNavigatingBack] = useState(false);
 
   // 全楽曲リストを作成
   const allSongs = animeList.flatMap((anime) =>
@@ -117,17 +119,18 @@ export function TrackMatcher({
       setIsSearching(true);
       setSearchResults([]);
       setSelectedTrackId(null);
+      setSkippedTrackName(null); // スキップメッセージをクリア
 
       const results = await searchTrack(currentSong.song);
-      setSearchResults(results);
 
-      // 自動マッチング可能な場合は自動選択して次に進む
-      if (canAutoMatch(results)) {
+      // 戻るボタンで来た場合は自動スキップしない
+      if (!isNavigatingBack && canAutoMatch(results)) {
         const autoMatch = getAutoMatchResult(results);
         if (autoMatch) {
-          setSelectedTrackId(autoMatch.id);
+          // スキップされた楽曲名を記録
+          setSkippedTrackName(currentSong.song.trackName);
 
-          // 自動的に選択して次の曲に進む
+          // 自動的に選択して次の曲に進む（検索結果は表示しない）
           const draftTrack: DraftTrack = {
             animeId: currentSong.animeId,
             animeName: currentSong.animeName,
@@ -148,13 +151,20 @@ export function TrackMatcher({
             return;
           }
 
-          // 次の曲に進む
-          setIsSearching(false);
+          // 次の曲に進む（検索結果を設定せずに）
           setCurrentIndex(currentIndex + 1);
+          // setIsSearchingはfalseにしない（次の検索が始まるまで検索中状態を保つ）
           return;
         }
       }
 
+      // 戻るボタンフラグをリセット
+      if (isNavigatingBack) {
+        setIsNavigatingBack(false);
+      }
+
+      // 完全一致でない場合のみ検索結果を表示
+      setSearchResults(results);
       setIsSearching(false);
     };
 
@@ -211,6 +221,7 @@ export function TrackMatcher({
 
   const handleBack = () => {
     if (currentIndex === 0) return;
+    setIsNavigatingBack(true); // 戻るボタンで来たことを記録
     const prevIndex = currentIndex - 1;
     setCurrentIndex(prevIndex);
     const prevDraft = matchedTracks[prevIndex];
@@ -233,6 +244,9 @@ export function TrackMatcher({
 
   const progress = ((currentIndex + 1) / totalSongs) * 100;
 
+  // 楽曲情報と検索結果を表示するかどうか（検索完了かつ結果がある場合のみ）
+  const shouldShowContent = !isSearching && searchResults.length > 0;
+
   return (
     <VStack gap={6} align="stretch">
       {/* 進捗 */}
@@ -252,8 +266,36 @@ export function TrackMatcher({
         <ProgressRoot value={progress} colorScheme="green" borderRadius="md" h="6px" />
       </MotionBox>
 
-      {/* 楽曲情報 */}
-      <MotionCard
+      {/* スキップ通知 */}
+      {skippedTrackName && (
+        <MotionBox
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3 }}
+        >
+          <Card.Root bg="green.50" borderWidth="1px" borderColor="green.200" _dark={{ bg: 'green.950', borderColor: 'green.800' }}>
+            <Card.Body py={3}>
+              <Text fontSize="sm" color="green.700" _dark={{ color: 'green.300' }}>
+                「{skippedTrackName}」は完全一致が見つかったためスキップされました
+              </Text>
+            </Card.Body>
+          </Card.Root>
+        </MotionBox>
+      )}
+
+      {/* 検索中または検索結果がない場合はスピナーを表示 */}
+      {!shouldShowContent && (
+        <Flex justify="center" py={12} direction="column" align="center" gap={3}>
+          <Spinner size="lg" color="fg.muted" />
+          <Text color="fg.muted" fontSize="sm">
+            検索中...
+          </Text>
+        </Flex>
+      )}
+
+      {/* 楽曲情報（検索完了後のみ表示） */}
+      {shouldShowContent && (
+        <MotionCard
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.3, delay: 0.1 }}
@@ -287,8 +329,10 @@ export function TrackMatcher({
           </VStack>
         </Card.Body>
       </MotionCard>
+      )}
 
-      {/* 検索結果 */}
+      {/* 検索結果（検索完了後のみ表示） */}
+      {shouldShowContent && (
       <MotionCard
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -418,8 +462,10 @@ export function TrackMatcher({
           )}
         </Card.Body>
       </MotionCard>
+      )}
 
       {/* アクション */}
+      {shouldShowContent && (
       <HStack justify="space-between" align="center">
         <Button
           variant="outline"
@@ -449,6 +495,7 @@ export function TrackMatcher({
           </Button>
         </HStack>
       </HStack>
+      )}
     </VStack>
   );
 }
