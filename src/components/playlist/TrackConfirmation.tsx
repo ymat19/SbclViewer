@@ -1,14 +1,4 @@
-import {
-  Box,
-  Button,
-  Card,
-  Flex,
-  Heading,
-  Text,
-  VStack,
-  Badge,
-  HStack,
-} from '@chakra-ui/react';
+import { Box, Button, Card, Flex, Heading, Text, VStack, Badge, HStack } from '@chakra-ui/react';
 import { motion } from 'framer-motion';
 
 import type { DraftTrack } from '@/types/playlist';

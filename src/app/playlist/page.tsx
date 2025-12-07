@@ -1,16 +1,6 @@
 'use client';
 
-import {
-  Box,
-  Container,
-  Heading,
-  VStack,
-  Text,
-  Button,
-  Flex,
-  Card,
-  Badge,
-} from '@chakra-ui/react';
+import { Box, Container, Heading, VStack, Text, Button, Flex, Card, Badge } from '@chakra-ui/react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { useCallback, useMemo, useState } from 'react';
@@ -42,9 +32,7 @@ export default function PlaylistPage() {
   const animeData = animeDataJson as Anime[];
   const filterSongs = useCallback(
     (songs: Anime['songs']) =>
-      songFilter === 'all'
-        ? songs
-        : songs.filter((song) => /^(op|ed)/i.test(song.type.trim())),
+      songFilter === 'all' ? songs : songs.filter((song) => /^(op|ed)/i.test(song.type.trim())),
     [songFilter],
   );
   const filteredAnimeData = useMemo(
@@ -129,8 +117,7 @@ export default function PlaylistPage() {
   const quarterAnimeList =
     selectedQuarter && currentStep !== 'selector'
       ? filteredAnimeData.filter(
-          (anime) =>
-            anime.quarter === selectedQuarter && animeStatuses.get(anime.id) === 'watched',
+          (anime) => anime.quarter === selectedQuarter && animeStatuses.get(anime.id) === 'watched',
         )
       : [];
 
@@ -159,11 +146,7 @@ export default function PlaylistPage() {
 
           {/* 説明 */}
           {currentStep === 'selector' && (
-            <Card.Root
-              bg="bg.surface"
-              borderWidth="1px"
-              borderColor="border.default"
-            >
+            <Card.Root bg="bg.surface" borderWidth="1px" borderColor="border.default">
               <Card.Body>
                 <Text mb={2} fontWeight="semibold" fontSize="sm" color="fg.default">
                   プレイリスト作成の流れ
@@ -185,19 +168,10 @@ export default function PlaylistPage() {
               {allDrafts.length > 0 && (
                 <Box>
                   <Heading as="h2" size={{ base: 'md', md: 'lg' }} mb={3}>
-                保存済みプレイリスト
-              </Heading>
-              <Card.Root
-                bg="bg.surface"
-                borderWidth="1px"
-                borderColor="border.default"
-              >
-                <VStack
-                  gap={0}
-                  align="stretch"
-                  divideY="1px"
-                  divideColor="border.default"
-                >
+                    保存済みプレイリスト
+                  </Heading>
+                  <Card.Root bg="bg.surface" borderWidth="1px" borderColor="border.default">
+                    <VStack gap={0} align="stretch" divideY="1px" divideColor="border.default">
                       {allDrafts.map((draft) => (
                         <Box key={draft.quarter} p={4}>
                           <Flex justify="space-between" align="center" gap={4}>

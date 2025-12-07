@@ -305,11 +305,7 @@ export function TrackMatcher({
                             />
                             <Box flex="1">
                               <Flex gap={2} align="center" mb={1} flexWrap="wrap">
-                              <Text
-                                fontWeight="medium"
-                                color="fg.default"
-                                fontSize="sm"
-                              >
+                                <Text fontWeight="medium" color="fg.default" fontSize="sm">
                                   {result.name}
                                 </Text>
                                 {result.confidence === 'exact' && (

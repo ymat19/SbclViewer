@@ -100,7 +100,9 @@ export function QuarterSelector({
                   {draft && (
                     <>
                       <Text>•</Text>
-                      <Text>{draft.tracks.filter((t) => t.selectedTrack).length} 曲マッチング済み</Text>
+                      <Text>
+                        {draft.tracks.filter((t) => t.selectedTrack).length} 曲マッチング済み
+                      </Text>
                     </>
                   )}
                 </Flex>

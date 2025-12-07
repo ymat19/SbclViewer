@@ -148,11 +148,13 @@ function HomeContent() {
   );
 
   // Count anime in each tab
-  const unwatchedCount = quarterAnime.filter((anime) => animeStatuses.get(anime.id) === 'unwatched')
-    .length;
+  const unwatchedCount = quarterAnime.filter(
+    (anime) => animeStatuses.get(anime.id) === 'unwatched',
+  ).length;
   const unselectedCount = quarterAnime.filter((anime) => !animeStatuses.has(anime.id)).length;
-  const watchedCount = quarterAnime.filter((anime) => animeStatuses.get(anime.id) === 'watched')
-    .length;
+  const watchedCount = quarterAnime.filter(
+    (anime) => animeStatuses.get(anime.id) === 'watched',
+  ).length;
 
   return (
     <>
@@ -271,7 +273,13 @@ function HomeContent() {
                 </Tabs.List>
 
                 <Tabs.Content value={currentTab} pt={4}>
-                  <Card.Root maxH="md" overflowY="auto" bg="bg.surface" borderWidth="1px" borderColor="border.default">
+                  <Card.Root
+                    maxH="md"
+                    overflowY="auto"
+                    bg="bg.surface"
+                    borderWidth="1px"
+                    borderColor="border.default"
+                  >
                     {filteredAnime.length === 0 ? (
                       <Card.Body>
                         <Text color="fg.muted">このクォーターに該当する作品がありません。</Text>
