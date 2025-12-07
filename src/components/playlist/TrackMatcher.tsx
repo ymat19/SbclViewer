@@ -16,11 +16,7 @@ import {
 import { motion, AnimatePresence } from 'framer-motion';
 import { Play, Pause } from 'lucide-react';
 import { useEffect, useState } from 'react';
-import { Play, Pause } from 'lucide-react';
-import { useEffect, useState } from 'react';
 
-import { useAudioPreview } from '@/hooks/useAudioPreview';
-import { useTrackSearch } from '@/hooks/useTrackSearch';
 import { useAudioPreview } from '@/hooks/useAudioPreview';
 import { useTrackSearch } from '@/hooks/useTrackSearch';
 import type { TrackSearchResult } from '@/services/music/types';
