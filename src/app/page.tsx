@@ -184,11 +184,9 @@ function HomeContent() {
                 Anime Song Playlist Creator
               </Heading>
               <Flex gap={2} align="center">
-                <Link href={playlistHref} passHref legacyBehavior>
-                  <Button as="a" colorScheme="blue" size={{ base: 'sm', md: 'md' }}>
-                    プレイリストを作成
-                  </Button>
-                </Link>
+                <Button asChild colorScheme="blue" size={{ base: 'sm', md: 'md' }}>
+                  <Link href={playlistHref}>プレイリストを作成</Link>
+                </Button>
                 <ColorModeButton />
               </Flex>
             </Flex>

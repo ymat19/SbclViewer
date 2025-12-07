@@ -144,17 +144,15 @@ export default function PlaylistPage() {
               プレイリスト作成
             </Heading>
             <Flex gap={2} align="center">
-              <Link href={homeHref} passHref legacyBehavior>
-                <Button
-                  as="a"
-                  variant="outline"
-                  size={{ base: 'sm', md: 'md' }}
-                  borderColor="border.default"
-                  color="fg.default"
-                >
-                  通常モードに戻る
-                </Button>
-              </Link>
+              <Button
+                asChild
+                variant="outline"
+                size={{ base: 'sm', md: 'md' }}
+                borderColor="border.default"
+                color="fg.default"
+              >
+                <Link href={homeHref}>通常モードに戻る</Link>
+              </Button>
               <ColorModeButton />
             </Flex>
           </Flex>
