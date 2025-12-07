@@ -11,10 +11,13 @@ import {
   HStack,
   RadioGroup,
   ProgressRoot,
+  IconButton,
 } from '@chakra-ui/react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { Play, Pause } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
+import { useAudioPreview } from '@/hooks/useAudioPreview';
 import { useTrackSearch } from '@/hooks/useTrackSearch';
 import type { TrackSearchResult } from '@/services/music/types';
 import type { Anime } from '@/types/anime';
@@ -33,6 +36,35 @@ interface TrackMatcherProps {
 const MotionBox = motion.create(Box);
 const MotionCard = motion.create(Card.Root);
 
+/**
+ * ミリ秒を分:秒形式に変換
+ */
+function formatDuration(durationMs: number): string {
+  const totalSeconds = Math.floor(durationMs / 1000);
+  const minutes = Math.floor(totalSeconds / 60);
+  const seconds = totalSeconds % 60;
+
+  return `${minutes}:${seconds.toString().padStart(2, '0')}`;
+}
+
+/**
+ * リリース日をフォーマット
+ */
+function formatReleaseDate(releaseDate: string): string {
+  // Spotify APIは "YYYY-MM-DD", "YYYY-MM", "YYYY" のいずれかの形式で返す
+  const parts = releaseDate.split('-');
+  if (parts.length === 3) {
+    // YYYY-MM-DD
+    return `${parts[0]}/${parts[1]}/${parts[2]}`;
+  } else if (parts.length === 2) {
+    // YYYY-MM
+    return `${parts[0]}/${parts[1]}`;
+  } else {
+    // YYYY
+    return parts[0];
+  }
+}
+
 export function TrackMatcher({
   animeList,
   onComplete,
@@ -42,6 +74,7 @@ export function TrackMatcher({
   singleEdit = false,
 }: TrackMatcherProps) {
   const { searchTrack, canAutoMatch, getAutoMatchResult } = useTrackSearch();
+  const { playingTrackId, playPreview, stopPreview, isLoading: isAudioLoading } = useAudioPreview();
 
   const [currentIndex, setCurrentIndex] = useState(startIndex);
   const [matchedTracks, setMatchedTracks] = useState<DraftTrack[]>(initialTracks);
@@ -76,6 +109,7 @@ export function TrackMatcher({
     if (!currentSong) return;
 
     const performSearch = async () => {
+      stopPreview(); // 楽曲切り替え時に再生停止
       setIsSearching(true);
       setSearchResults([]);
       setSelectedTrackId(null);
@@ -303,6 +337,28 @@ export function TrackMatcher({
                               value={result.id}
                               onChange={() => handleSelectTrack(result.id)}
                             />
+
+                            {/* 再生ボタン */}
+                            <IconButton
+                              aria-label={playingTrackId === result.id ? '停止' : '再生'}
+                              size="sm"
+                              variant="ghost"
+                              colorScheme="gray"
+                              onClick={(e) => {
+                                e.stopPropagation(); // カードクリック伝播防止
+                                if (result.previewUrl) {
+                                  playPreview(result.id, result.previewUrl);
+                                }
+                              }}
+                              disabled={!result.previewUrl || isAudioLoading}
+                            >
+                              {playingTrackId === result.id ? (
+                                <Pause size={16} />
+                              ) : (
+                                <Play size={16} />
+                              )}
+                            </IconButton>
+
                             <Box flex="1">
                               <Flex gap={2} align="center" mb={1} flexWrap="wrap">
                                 <Text fontWeight="medium" color="fg.default" fontSize="sm">
@@ -316,7 +372,9 @@ export function TrackMatcher({
                               </Flex>
                               <Text fontSize="sm" color="fg.muted">
                                 {result.artist}
-                                {result.album && ` • ${result.album}`}
+                                {result.durationMs && ` • ${formatDuration(result.durationMs)}`}
+                                {result.releaseDate &&
+                                  ` • ${formatReleaseDate(result.releaseDate)}`}
                               </Text>
                             </Box>
                           </Flex>

@@ -15,6 +15,9 @@ export interface TrackSearchResult {
   album?: string;
   uri: string;
   confidence: 'exact' | 'partial' | 'low';
+  durationMs?: number;
+  releaseDate?: string;
+  previewUrl?: string;
 }
 
 export interface CreatePlaylistOptions {
