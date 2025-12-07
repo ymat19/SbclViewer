@@ -18,6 +18,7 @@ import {
   ToastCloseTrigger,
   ToastActionTrigger,
 } from '@chakra-ui/react';
+import { Checkbox } from '@/components/ui/checkbox';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { Suspense, useCallback, useMemo, useState } from 'react';
@@ -34,6 +35,7 @@ import { useSpotifyAuth } from '@/hooks/useSpotifyAuth';
 import { getMusicServiceInstance } from '@/services/music';
 import type { Anime } from '@/types/anime';
 import type { DraftTrack, PlaylistDraft, SongFilterMode } from '@/types/playlist';
+import { generateMergedPlaylistName, compareQuarters } from '@/utils/quarterHelper';
 
 type Step = 'selector' | 'matcher' | 'confirmation';
 
@@ -60,6 +62,8 @@ function PlaylistPageContent() {
   const [matchStartIndex, setMatchStartIndex] = useState(0);
   const [isEditingTrack, setIsEditingTrack] = useState(false);
   const [creatingPlaylistFor, setCreatingPlaylistFor] = useState<string | null>(null);
+  const [selectedQuartersForMerge, setSelectedQuartersForMerge] = useState<Set<string>>(new Set());
+  const [isCreatingMergedPlaylist, setIsCreatingMergedPlaylist] = useState(false);
   const animeData = animeDataJson as Anime[];
   const filterSongs = useCallback(
     (songs: Anime['songs']) =>
@@ -191,6 +195,107 @@ function PlaylistPageContent() {
     }
   };
 
+  const handleCreateMergedPlaylist = async () => {
+    if (selectedQuartersForMerge.size === 0) {
+      toaster.create({
+        title: 'エラー',
+        description: 'クォーターを選択してください',
+        type: 'error',
+      });
+      return;
+    }
+
+    // 選択されたクォーターのドラフトを取得
+    const selectedDrafts = Array.from(selectedQuartersForMerge)
+      .map((quarter) => ({ quarter, draft: drafts.get(quarter) }))
+      .filter((item): item is { quarter: string; draft: PlaylistDraft } => item.draft !== undefined);
+
+    if (selectedDrafts.length === 0) {
+      toaster.create({
+        title: 'エラー',
+        description: '選択されたクォーターのプレイリストが見つかりません',
+        type: 'error',
+      });
+      return;
+    }
+
+    // 全てのマッチング済みトラックを収集（重複を除く）
+    const trackUrisSet = new Set<string>();
+    const allMatchedTracks: DraftTrack[] = [];
+
+    for (const { draft } of selectedDrafts) {
+      for (const track of draft.tracks) {
+        if (track.selectedTrack && !trackUrisSet.has(track.selectedTrack.uri)) {
+          trackUrisSet.add(track.selectedTrack.uri);
+          allMatchedTracks.push(track);
+        }
+      }
+    }
+
+    if (allMatchedTracks.length === 0) {
+      toaster.create({
+        title: 'エラー',
+        description: 'プレイリストに追加できる楽曲がありません',
+        type: 'error',
+      });
+      return;
+    }
+
+    setIsCreatingMergedPlaylist(true);
+
+    try {
+      const musicService = getMusicServiceInstance();
+      const trackUris = Array.from(trackUrisSet);
+
+      // クォーターをソートしてプレイリスト名を生成
+      const sortedQuarters = Array.from(selectedQuartersForMerge).sort(compareQuarters);
+      const playlistName = generateMergedPlaylistName(sortedQuarters);
+      const description = `${sortedQuarters.join(', ')}の視聴済みアニメの主題歌プレイリスト（${allMatchedTracks.length}曲）`;
+
+      const playlist = await musicService.createPlaylist({
+        name: playlistName,
+        description,
+        trackUris,
+      });
+
+      toaster.create({
+        title: 'プレイリストを作成しました',
+        description: `${playlist.name}（${allMatchedTracks.length}曲）`,
+        type: 'success',
+        action: {
+          label: 'Spotifyで開く',
+          onClick: () => {
+            window.open(playlist.url, '_blank', 'noopener,noreferrer');
+          },
+        },
+      });
+
+      // 選択をクリア
+      setSelectedQuartersForMerge(new Set());
+    } catch (error) {
+      console.error('Merged playlist creation failed:', error);
+      toaster.create({
+        title: 'プレイリスト作成に失敗しました',
+        description: error instanceof Error ? error.message : '不明なエラーが発生しました',
+        type: 'error',
+      });
+    } finally {
+      setIsCreatingMergedPlaylist(false);
+    }
+  };
+
+  const handleToggleQuarterSelection = (quarter: string) => {
+    setSelectedQuartersForMerge((prev) => {
+      const next = new Set(prev);
+      if (next.has(quarter)) {
+        next.delete(quarter);
+      } else {
+        next.add(quarter);
+      }
+      return next;
+    });
+  };
+
   const incomingQuarter = searchParams.get('quarter');
   const homeQuarter = selectedQuarter ?? incomingQuarter;
   const homeHref = homeQuarter ? `/?quarter=${encodeURIComponent(homeQuarter)}` : '/';
@@ -280,28 +385,51 @@ function PlaylistPageContent() {
               {/* 保存済みドラフト一覧 */}
               {allDrafts.length > 0 && (
                 <Box>
-                  <Heading as="h2" size={{ base: 'md', md: 'lg' }} mb={3}>
-                    保存済みプレイリスト
-                  </Heading>
+                  <Flex justify="space-between" align="center" mb={3}>
+                    <Heading as="h2" size={{ base: 'md', md: 'lg' }}>
+                      保存済みプレイリスト
+                    </Heading>
+                    {selectedQuartersForMerge.size > 0 && (
+                      <Button
+                        size="sm"
+                        colorScheme="blue"
+                        onClick={handleCreateMergedPlaylist}
+                        loading={isCreatingMergedPlaylist}
+                        disabled={isCreatingMergedPlaylist}
+                      >
+                        選択したクォーターをまとめる ({selectedQuartersForMerge.size}件)
+                      </Button>
+                    )}
+                  </Flex>
                   <Card.Root bg="bg.surface" borderWidth="1px" borderColor="border.default">
                     <VStack gap={0} align="stretch" divideY="1px" divideColor="border.default">
                       {allDrafts.map((draft) => (
                         <Box key={draft.quarter} p={4}>
                           <Flex justify="space-between" align="center" gap={4}>
-                            <Box flex="1">
-                              <Flex gap={2} align="center" mb={1}>
-                                <Text fontWeight="semibold" fontSize="md">
-                                  {draft.quarter}
+                            <Flex align="center" gap={3} flex="1">
+                              <Checkbox
+                                checked={selectedQuartersForMerge.has(draft.quarter)}
+                                onCheckedChange={(details) => handleToggleQuarterSelection(draft.quarter)}
+                                disabled={
+                                  isCreatingMergedPlaylist ||
+                                  draft.tracks.filter((t) => t.selectedTrack).length === 0
+                                }
+                              />
+                              <Box flex="1">
+                                <Flex gap={2} align="center" mb={1}>
+                                  <Text fontWeight="semibold" fontSize="md">
+                                    {draft.quarter}
+                                  </Text>
+                                  <Badge colorScheme="green" fontSize="xs">
+                                    {draft.tracks.filter((t) => t.selectedTrack).length} /{' '}
+                                    {draft.tracks.length} 曲
+                                  </Badge>
+                                </Flex>
+                                <Text fontSize="sm" color="fg.muted">
+                                  更新: {new Date(draft.updatedAt).toLocaleString('ja-JP')}
                                 </Text>
-                                <Badge colorScheme="green" fontSize="xs">
-                                  {draft.tracks.filter((t) => t.selectedTrack).length} /{' '}
-                                  {draft.tracks.length} 曲
-                                </Badge>
-                              </Flex>
-                              <Text fontSize="sm" color="fg.muted">
-                                更新: {new Date(draft.updatedAt).toLocaleString('ja-JP')}
-                              </Text>
-                            </Box>
+                              </Box>
+                            </Flex>
                             <Flex gap={2}>
                               <Button
                                 size="sm"
@@ -309,6 +437,7 @@ function PlaylistPageContent() {
                                 onClick={() => handleSelectQuarter(draft.quarter)}
                                 borderColor="border.default"
                                 color="fg.default"
+                                disabled={isCreatingMergedPlaylist}
                               >
                                 編集
                               </Button>
@@ -319,6 +448,7 @@ function PlaylistPageContent() {
                                 loading={creatingPlaylistFor === draft.quarter}
                                 disabled={
                                   creatingPlaylistFor !== null ||
+                                  isCreatingMergedPlaylist ||
                                   draft.tracks.filter((t) => t.selectedTrack).length === 0
                                 }
                               >
