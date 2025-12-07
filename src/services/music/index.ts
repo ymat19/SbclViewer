@@ -1,4 +1,5 @@
 import { MockMusicService } from './mock/client';
+import { SpotifyMusicService } from './spotify/client';
 import type { MusicService, MusicServiceProvider } from './types';
 
 /**
@@ -13,10 +14,7 @@ export function getMusicService(): MusicService {
     case 'mock':
       return new MockMusicService();
     case 'spotify':
-      // Spotify実装は Phase 6 で追加予定
-      throw new Error(
-        'Spotify service is not yet implemented. Use NEXT_PUBLIC_MUSIC_SERVICE_PROVIDER=mock for now.',
-      );
+      return new SpotifyMusicService();
     default:
       console.warn(`Unknown music service provider: ${provider}. Falling back to mock.`);
       return new MockMusicService();

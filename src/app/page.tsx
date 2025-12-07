@@ -31,6 +31,7 @@ import { AnimeDetailDialog } from '@/components/AnimeDetailDialog';
 import { SwipeableAnimeItem } from '@/components/SwipeableAnimeItem';
 import { ColorModeButton } from '@/components/ui/color-mode';
 import { useAnimeStatuses } from '@/hooks/useAnimeStatuses';
+import { useSpotifyAuth } from '@/hooks/useSpotifyAuth';
 import type { Anime, Song, ViewTab, AnimeStatus } from '@/types/anime';
 
 const toaster = createToaster({
@@ -40,6 +41,7 @@ const toaster = createToaster({
 });
 
 function HomeContent() {
+  useSpotifyAuth(); // Spotify認証コールバックを処理
   const router = useRouter();
   const searchParams = useSearchParams();
   const [currentTab, setCurrentTab] = useState<ViewTab>('unselected');
