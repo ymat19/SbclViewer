@@ -18,7 +18,6 @@ import {
   ToastCloseTrigger,
   ToastActionTrigger,
 } from '@chakra-ui/react';
-import { Checkbox } from '@/components/ui/checkbox';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { Suspense, useCallback, useMemo, useState } from 'react';
@@ -27,6 +26,7 @@ import animeDataJson from '@/../public/data.json';
 import { QuarterSelector } from '@/components/playlist/QuarterSelector';
 import { TrackConfirmation } from '@/components/playlist/TrackConfirmation';
 import { TrackMatcher } from '@/components/playlist/TrackMatcher';
+import { Checkbox } from '@/components/ui/checkbox';
 import { ColorModeButton } from '@/components/ui/color-mode';
 import { useAnimeStatuses } from '@/hooks/useAnimeStatuses';
 import { useMusicServiceAuth } from '@/hooks/useMusicServiceAuth';
@@ -208,7 +208,9 @@ function PlaylistPageContent() {
     // 選択されたクォーターのドラフトを取得
     const selectedDrafts = Array.from(selectedQuartersForMerge)
       .map((quarter) => ({ quarter, draft: drafts.get(quarter) }))
-      .filter((item): item is { quarter: string; draft: PlaylistDraft } => item.draft !== undefined);
+      .filter(
+        (item): item is { quarter: string; draft: PlaylistDraft } => item.draft !== undefined,
+      );
 
     if (selectedDrafts.length === 0) {
       toaster.create({
@@ -409,7 +411,7 @@ function PlaylistPageContent() {
                             <Flex align="center" gap={3} flex="1">
                               <Checkbox
                                 checked={selectedQuartersForMerge.has(draft.quarter)}
-                                onCheckedChange={(details) => handleToggleQuarterSelection(draft.quarter)}
+                                onCheckedChange={() => handleToggleQuarterSelection(draft.quarter)}
                                 disabled={
                                   isCreatingMergedPlaylist ||
                                   draft.tracks.filter((t) => t.selectedTrack).length === 0

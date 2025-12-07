@@ -50,6 +50,7 @@ export function useTrackSearch() {
 
       // 完全一致のものを探す（最初の1件のみ）
       let exactMatchFound = false;
+
       return results.map((result) => {
         const isExact = isExactMatch(query, result);
 
