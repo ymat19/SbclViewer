@@ -12,6 +12,7 @@ import {
   Badge,
 } from '@chakra-ui/react';
 import Link from 'next/link';
+import { useSearchParams } from 'next/navigation';
 import { useCallback, useMemo, useState } from 'react';
 
 import { QuarterSelector } from '@/components/playlist/QuarterSelector';
@@ -27,6 +28,7 @@ import animeDataJson from '@/../public/data.json';
 type Step = 'selector' | 'matcher' | 'confirmation';
 
 export default function PlaylistPage() {
+  const searchParams = useSearchParams();
   const { getAllDrafts, saveDraft, drafts } = usePlaylistDrafts();
   const { statuses: animeStatuses } = useAnimeStatuses();
   const allDrafts = getAllDrafts();
@@ -102,6 +104,10 @@ export default function PlaylistPage() {
     console.log('Edit track at index:', index);
   };
 
+  const incomingQuarter = searchParams.get('quarter');
+  const homeQuarter = selectedQuarter ?? incomingQuarter;
+  const homeHref = homeQuarter ? `/?quarter=${encodeURIComponent(homeQuarter)}` : '/';
+
   const quarterAnimeList =
     selectedQuarter && currentStep !== 'selector'
       ? filteredAnimeData.filter(
@@ -120,12 +126,12 @@ export default function PlaylistPage() {
               プレイリスト作成
             </Heading>
             <Flex gap={2} align="center">
-              <Link href="/" passHref legacyBehavior>
+              <Link href={homeHref} passHref legacyBehavior>
                 <Button
                   as="a"
                   variant="outline"
                   size={{ base: 'sm', md: 'md' }}
-                  borderColor={{ base: 'gray.200', _dark: 'gray.600' }}
+                  borderColor="border.default"
                   color="fg.default"
                 >
                   通常モードに戻る

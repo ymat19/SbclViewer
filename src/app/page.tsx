@@ -55,6 +55,7 @@ function HomeContent() {
   const defaultQuarter =
     quarters.find((q) => q === '2010q1') ?? quarters[quarters.length - 1] ?? '';
   const selectedQuarter = selectedQuarterParam ?? defaultQuarter;
+  const playlistHref = `/playlist${selectedQuarter ? `?quarter=${encodeURIComponent(selectedQuarter)}` : ''}`;
 
   // Enhanced setStatus with undo functionality
   const handleSetStatus = (id: string, newStatus: AnimeStatus | null) => {
@@ -183,7 +184,7 @@ function HomeContent() {
                 Anime Song Playlist Creator
               </Heading>
               <Flex gap={2} align="center">
-                <Link href="/playlist" passHref legacyBehavior>
+                <Link href={playlistHref} passHref legacyBehavior>
                   <Button as="a" colorScheme="blue" size={{ base: 'sm', md: 'md' }}>
                     プレイリストを作成
                   </Button>
