@@ -123,8 +123,8 @@ export function TrackMatcher({
 
       const results = await searchTrack(currentSong.song);
 
-      // 戻るボタンで来た場合は自動スキップしない
-      if (!isNavigatingBack && canAutoMatch(results)) {
+      // 戻るボタンまたは編集モードで来た場合は自動スキップしない
+      if (!isNavigatingBack && !singleEdit && canAutoMatch(results)) {
         const autoMatch = getAutoMatchResult(results);
         if (autoMatch) {
           // スキップされた楽曲名を記録
