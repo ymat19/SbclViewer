@@ -7,7 +7,7 @@ import { SpotifyMusicService } from '@/services/music/spotify/client';
  * Spotify認証コールバックを処理するフック
  * URLパラメータからcodeとstateを取得し、トークン交換を実行
  */
-export function useSpotifyAuth() {
+export function useSpotifyAuth(onAuthComplete?: () => void) {
   useEffect(() => {
     const handleAuthCallback = async () => {
       // URLパラメータを確認
@@ -38,6 +38,9 @@ export function useSpotifyAuth() {
 
           if (!result.success) {
             console.error('Authentication failed:', result.error);
+          } else if (onAuthComplete) {
+            // 認証完了後のコールバックを実行
+            onAuthComplete();
           }
         } catch (error) {
           console.error('Auth callback error:', error);
@@ -49,5 +52,5 @@ export function useSpotifyAuth() {
     };
 
     handleAuthCallback();
-  }, []);
+  }, [onAuthComplete]);
 }

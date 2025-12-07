@@ -22,7 +22,9 @@ import { TrackConfirmation } from '@/components/playlist/TrackConfirmation';
 import { TrackMatcher } from '@/components/playlist/TrackMatcher';
 import { ColorModeButton } from '@/components/ui/color-mode';
 import { useAnimeStatuses } from '@/hooks/useAnimeStatuses';
+import { useMusicServiceAuth } from '@/hooks/useMusicServiceAuth';
 import { usePlaylistDrafts } from '@/hooks/usePlaylistDrafts';
+import { useSpotifyAuth } from '@/hooks/useSpotifyAuth';
 import type { Anime } from '@/types/anime';
 import type { DraftTrack, PlaylistDraft, SongFilterMode } from '@/types/playlist';
 
@@ -32,6 +34,10 @@ function PlaylistPageContent() {
   const searchParams = useSearchParams();
   const { getAllDrafts, saveDraft, drafts } = usePlaylistDrafts();
   const { statuses: animeStatuses } = useAnimeStatuses();
+  const { isAuthenticated, isChecking, login, checkAuth } = useMusicServiceAuth();
+
+  // Spotify認証コールバックを処理（認証完了後に状態を再チェック）
+  useSpotifyAuth(checkAuth);
   const allDrafts = getAllDrafts();
 
   const [currentStep, setCurrentStep] = useState<Step>('selector');
@@ -172,8 +178,40 @@ function PlaylistPageContent() {
             </Card.Root>
           )}
 
+          {/* 認証状態チェック */}
+          {isChecking ? (
+            <Card.Root bg="bg.surface" borderWidth="1px" borderColor="border.default">
+              <Card.Body>
+                <Flex justify="center" align="center" py={4}>
+                  <Spinner size="lg" color="blue.500" />
+                  <Text ml={3} color="fg.muted">
+                    認証状態を確認中...
+                  </Text>
+                </Flex>
+              </Card.Body>
+            </Card.Root>
+          ) : !isAuthenticated ? (
+            <Card.Root bg="bg.surface" borderWidth="1px" borderColor="border.default">
+              <Card.Body>
+                <VStack gap={4} align="stretch">
+                  <Box>
+                    <Heading as="h3" size="md" mb={2}>
+                      Spotifyでログイン
+                    </Heading>
+                    <Text fontSize="sm" color="fg.muted">
+                      プレイリストを作成するには、Spotifyアカウントでログインする必要があります。
+                    </Text>
+                  </Box>
+                  <Button colorScheme="green" size="lg" onClick={login} width="full">
+                    Spotifyでログイン
+                  </Button>
+                </VStack>
+              </Card.Body>
+            </Card.Root>
+          ) : null}
+
           {/* メインコンテンツ */}
-          {currentStep === 'selector' && (
+          {!isChecking && isAuthenticated && currentStep === 'selector' && (
             <>
               {/* 保存済みドラフト一覧 */}
               {allDrafts.length > 0 && (
@@ -259,7 +297,7 @@ function PlaylistPageContent() {
             </>
           )}
 
-          {currentStep === 'matcher' && selectedQuarter && (
+          {!isChecking && isAuthenticated && currentStep === 'matcher' && selectedQuarter && (
             <TrackMatcher
               quarter={selectedQuarter}
               animeList={quarterAnimeList}
@@ -271,7 +309,7 @@ function PlaylistPageContent() {
             />
           )}
 
-          {currentStep === 'confirmation' && selectedQuarter && (
+          {!isChecking && isAuthenticated && currentStep === 'confirmation' && selectedQuarter && (
             <TrackConfirmation
               quarter={selectedQuarter}
               tracks={matchedTracks}
