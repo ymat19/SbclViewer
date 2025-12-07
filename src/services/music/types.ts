@@ -17,6 +17,7 @@ export interface TrackSearchResult {
   confidence: 'exact' | 'partial' | 'low';
   durationMs?: number;
   releaseDate?: string;
+  previewUrl?: string;
 }
 
 export interface CreatePlaylistOptions {

@@ -30,6 +30,7 @@ interface SpotifySearchResponse {
       album: { name: string; release_date: string };
       uri: string;
       duration_ms: number;
+      preview_url: string | null;
     }>;
   };
 }
@@ -239,6 +240,7 @@ export class SpotifyMusicService implements MusicService {
             confidence: 'partial' as const, // 完全一致判定はuseTrackSearchで行う
             durationMs: track.duration_ms,
             releaseDate: track.album.release_date,
+            previewUrl: track.preview_url ?? undefined,
           }));
         }
 
@@ -278,6 +280,7 @@ export class SpotifyMusicService implements MusicService {
         confidence: 'partial' as const, // 完全一致判定はuseTrackSearchで行う
         durationMs: track.duration_ms,
         releaseDate: track.album.release_date,
+        previewUrl: track.preview_url ?? undefined,
       }));
     } catch (error) {
       console.error('Track search failed:', error);

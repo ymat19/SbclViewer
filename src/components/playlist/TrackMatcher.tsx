@@ -11,11 +11,14 @@ import {
   HStack,
   RadioGroup,
   ProgressRoot,
+  IconButton,
 } from '@chakra-ui/react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useEffect, useState } from 'react';
+import { Play, Pause } from 'lucide-react';
 
 import { useTrackSearch } from '@/hooks/useTrackSearch';
+import { useAudioPreview } from '@/hooks/useAudioPreview';
 import type { TrackSearchResult } from '@/services/music/types';
 import type { Anime } from '@/types/anime';
 import type { DraftTrack } from '@/types/playlist';
@@ -70,6 +73,7 @@ export function TrackMatcher({
   singleEdit = false,
 }: TrackMatcherProps) {
   const { searchTrack, canAutoMatch, getAutoMatchResult } = useTrackSearch();
+  const { playingTrackId, playPreview, stopPreview, isLoading: isAudioLoading } = useAudioPreview();
 
   const [currentIndex, setCurrentIndex] = useState(startIndex);
   const [matchedTracks, setMatchedTracks] = useState<DraftTrack[]>(initialTracks);
@@ -104,6 +108,7 @@ export function TrackMatcher({
     if (!currentSong) return;
 
     const performSearch = async () => {
+      stopPreview(); // 楽曲切り替え時に再生停止
       setIsSearching(true);
       setSearchResults([]);
       setSelectedTrackId(null);
@@ -331,6 +336,28 @@ export function TrackMatcher({
                               value={result.id}
                               onChange={() => handleSelectTrack(result.id)}
                             />
+
+                            {/* 再生ボタン */}
+                            <IconButton
+                              aria-label={playingTrackId === result.id ? '停止' : '再生'}
+                              size="sm"
+                              variant="ghost"
+                              colorScheme="gray"
+                              onClick={(e) => {
+                                e.stopPropagation(); // カードクリック伝播防止
+                                if (result.previewUrl) {
+                                  playPreview(result.id, result.previewUrl);
+                                }
+                              }}
+                              disabled={!result.previewUrl || isAudioLoading}
+                            >
+                              {playingTrackId === result.id ? (
+                                <Pause size={16} />
+                              ) : (
+                                <Play size={16} />
+                              )}
+                            </IconButton>
+
                             <Box flex="1">
                               <Flex gap={2} align="center" mb={1} flexWrap="wrap">
                                 <Text fontWeight="medium" color="fg.default" fontSize="sm">
