@@ -1,6 +1,8 @@
 import type { Song } from './anime';
 import type { TrackSearchResult } from '@/services/music/types';
 
+export type SongFilterMode = 'oped' | 'all';
+
 /**
  * プレイリストドラフトの楽曲情報
  */
@@ -24,6 +26,7 @@ export interface PlaylistDraft {
   createdAt: string;
   updatedAt: string;
   tracks: DraftTrack[];
+  songFilter?: SongFilterMode;
 }
 
 /**

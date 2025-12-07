@@ -12,7 +12,7 @@ import {
   Badge,
 } from '@chakra-ui/react';
 import Link from 'next/link';
-import { useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 
 import { QuarterSelector } from '@/components/playlist/QuarterSelector';
 import { TrackConfirmation } from '@/components/playlist/TrackConfirmation';
@@ -21,7 +21,7 @@ import { ColorModeButton } from '@/components/ui/color-mode';
 import { useAnimeStatuses } from '@/hooks/useAnimeStatuses';
 import { usePlaylistDrafts } from '@/hooks/usePlaylistDrafts';
 import type { Anime } from '@/types/anime';
-import type { DraftTrack, PlaylistDraft } from '@/types/playlist';
+import type { DraftTrack, PlaylistDraft, SongFilterMode } from '@/types/playlist';
 import animeDataJson from '@/../public/data.json';
 
 type Step = 'selector' | 'matcher' | 'confirmation';
@@ -34,7 +34,25 @@ export default function PlaylistPage() {
   const [currentStep, setCurrentStep] = useState<Step>('selector');
   const [selectedQuarter, setSelectedQuarter] = useState<string | null>(null);
   const [matchedTracks, setMatchedTracks] = useState<DraftTrack[]>([]);
+  const [songFilter, setSongFilter] = useState<SongFilterMode>('oped');
   const animeData = animeDataJson as Anime[];
+  const filterSongs = useCallback(
+    (songs: Anime['songs']) =>
+      songFilter === 'all'
+        ? songs
+        : songs.filter((song) => /^(op|ed)/i.test(song.type.trim())),
+    [songFilter],
+  );
+  const filteredAnimeData = useMemo(
+    () =>
+      animeData
+        .map((anime) => ({
+          ...anime,
+          songs: filterSongs(anime.songs),
+        }))
+        .filter((anime) => anime.songs.length > 0),
+    [animeData, filterSongs],
+  );
 
   const handleSelectQuarter = (quarter: string) => {
     setSelectedQuarter(quarter);
@@ -42,6 +60,9 @@ export default function PlaylistPage() {
     const existingDraft = drafts.get(quarter);
     if (existingDraft) {
       setMatchedTracks(existingDraft.tracks);
+      if (existingDraft.songFilter) {
+        setSongFilter(existingDraft.songFilter);
+      }
     } else {
       setMatchedTracks([]);
     }
@@ -61,6 +82,7 @@ export default function PlaylistPage() {
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
       tracks: matchedTracks,
+      songFilter,
     };
 
     saveDraft(selectedQuarter, draft);
@@ -82,11 +104,9 @@ export default function PlaylistPage() {
 
   const quarterAnimeList =
     selectedQuarter && currentStep !== 'selector'
-      ? animeData.filter(
+      ? filteredAnimeData.filter(
           (anime) =>
-            anime.quarter === selectedQuarter &&
-            animeStatuses.get(anime.id) === 'watched' &&
-            anime.songs.length > 0,
+            anime.quarter === selectedQuarter && animeStatuses.get(anime.id) === 'watched',
         )
       : [];
 
@@ -179,10 +199,36 @@ export default function PlaylistPage() {
                 <Heading as="h2" size={{ base: 'md', md: 'lg' }} mb={3} color="gray.200">
                   新しくプレイリストを作成
                 </Heading>
+                <Box mb={3}>
+                  <Text color="gray.300" fontSize="sm" mb={2}>
+                    対象楽曲
+                  </Text>
+                  <Flex gap={2} wrap="wrap">
+                    <Button
+                      size="sm"
+                      colorScheme="blue"
+                      variant={songFilter === 'oped' ? 'solid' : 'outline'}
+                      onClick={() => setSongFilter('oped')}
+                    >
+                      OP/EDのみ
+                    </Button>
+                    <Button
+                      size="sm"
+                      colorScheme="gray"
+                      variant={songFilter === 'all' ? 'solid' : 'outline'}
+                      onClick={() => setSongFilter('all')}
+                    >
+                      全ての楽曲
+                    </Button>
+                  </Flex>
+                  <Text color="gray.500" fontSize="xs" mt={1}>
+                    OP/EDのみではtypeがOP/EDの曲だけを対象にします。
+                  </Text>
+                </Box>
                 <Card.Root bg="gray.800" borderWidth="1px" borderColor="gray.700">
                   <Card.Body>
                     <QuarterSelector
-                      animeData={animeData}
+                      animeData={filteredAnimeData}
                       animeStatuses={animeStatuses}
                       drafts={drafts}
                       onSelectQuarter={handleSelectQuarter}
