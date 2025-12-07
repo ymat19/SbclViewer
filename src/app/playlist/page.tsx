@@ -1,9 +1,20 @@
 'use client';
 
-import { Box, Container, Heading, VStack, Text, Button, Flex, Card, Badge } from '@chakra-ui/react';
+import {
+  Box,
+  Container,
+  Heading,
+  VStack,
+  Text,
+  Button,
+  Flex,
+  Card,
+  Badge,
+  Spinner,
+} from '@chakra-ui/react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
-import { useCallback, useMemo, useState } from 'react';
+import { Suspense, useCallback, useMemo, useState } from 'react';
 
 import animeDataJson from '@/../public/data.json';
 import { QuarterSelector } from '@/components/playlist/QuarterSelector';
@@ -17,7 +28,7 @@ import type { DraftTrack, PlaylistDraft, SongFilterMode } from '@/types/playlist
 
 type Step = 'selector' | 'matcher' | 'confirmation';
 
-export default function PlaylistPage() {
+function PlaylistPageContent() {
   const searchParams = useSearchParams();
   const { getAllDrafts, saveDraft, drafts } = usePlaylistDrafts();
   const { statuses: animeStatuses } = useAnimeStatuses();
@@ -272,5 +283,22 @@ export default function PlaylistPage() {
         </VStack>
       </Container>
     </Box>
+  );
+}
+
+export default function PlaylistPage() {
+  return (
+    <Suspense
+      fallback={
+        <Flex minH="100vh" alignItems="center" justifyContent="center">
+          <VStack gap={4}>
+            <Spinner size="xl" color="blue.500" />
+            <Text color="fg.muted">Loading...</Text>
+          </VStack>
+        </Flex>
+      }
+    >
+      <PlaylistPageContent />
+    </Suspense>
   );
 }
