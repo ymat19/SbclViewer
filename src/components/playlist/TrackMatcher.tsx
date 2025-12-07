@@ -85,10 +85,23 @@ export function TrackMatcher({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentIndex]);
 
-  const handleNext = () => {
-    if (!currentSong) return;
+  const upsertDraftAndMaybeComplete = (draftTrack: DraftTrack) => {
+    const nextTracks = [...matchedTracks];
+    nextTracks[currentIndex] = draftTrack;
 
-    const selectedTrack = searchResults.find((r) => r.id === selectedTrackId);
+    const isLast = currentIndex >= totalSongs - 1;
+    if (isLast) {
+      onComplete(nextTracks);
+    } else {
+      setMatchedTracks(nextTracks);
+      setCurrentIndex(currentIndex + 1);
+    }
+  };
+
+  const handleSelectTrack = (trackId: string) => {
+    if (!currentSong) return;
+    setSelectedTrackId(trackId);
+    const selectedTrack = searchResults.find((r) => r.id === trackId);
     const draftTrack: DraftTrack = {
       animeId: currentSong.animeId,
       animeName: currentSong.animeName,
@@ -101,15 +114,7 @@ export function TrackMatcher({
       selectedTrack,
       candidates: searchResults,
     };
-
-    setMatchedTracks([...matchedTracks, draftTrack]);
-
-    if (currentIndex < totalSongs - 1) {
-      setCurrentIndex(currentIndex + 1);
-    } else {
-      // 完了
-      onComplete([...matchedTracks, draftTrack]);
-    }
+    upsertDraftAndMaybeComplete(draftTrack);
   };
 
   const handleSkip = () => {
@@ -123,14 +128,35 @@ export function TrackMatcher({
       candidates: searchResults,
     };
 
-    setMatchedTracks([...matchedTracks, draftTrack]);
+    const nextTracks = [...matchedTracks];
+    nextTracks[currentIndex] = draftTrack;
 
-    if (currentIndex < totalSongs - 1) {
-      setCurrentIndex(currentIndex + 1);
+    const isLast = currentIndex >= totalSongs - 1;
+    if (isLast) {
+      onComplete(nextTracks);
     } else {
-      onComplete([...matchedTracks, draftTrack]);
+      setMatchedTracks(nextTracks);
+      setCurrentIndex(currentIndex + 1);
     }
   };
+
+  const handleBack = () => {
+    if (currentIndex === 0) return;
+    const prevIndex = currentIndex - 1;
+    setCurrentIndex(prevIndex);
+    const prevDraft = matchedTracks[prevIndex];
+    setSelectedTrackId(prevDraft?.selectedTrack?.id ?? null);
+  };
+
+  // 過去の選択を復元（戻る時用）
+  useEffect(() => {
+    const draft = matchedTracks[currentIndex];
+    if (draft?.selectedTrack) {
+      setSelectedTrackId(draft.selectedTrack.id);
+    } else {
+      setSelectedTrackId(null);
+    }
+  }, [currentIndex, matchedTracks, searchResults]);
 
   if (!currentSong) {
     return <Text color="fg.muted">楽曲がありません</Text>;
@@ -249,7 +275,7 @@ export function TrackMatcher({
                         borderWidth="1px"
                         borderColor={selectedTrackId === result.id ? 'green.600' : 'gray.700'}
                         bg={selectedTrackId === result.id ? 'green.950' : 'gray.800'}
-                        onClick={() => setSelectedTrackId(result.id)}
+                        onClick={() => handleSelectTrack(result.id)}
                         cursor="pointer"
                         _hover={{
                           borderColor: selectedTrackId === result.id ? 'green.500' : 'gray.600',
@@ -259,7 +285,7 @@ export function TrackMatcher({
                           <Flex gap={3} align="start">
                             <RadioGroup.Item
                               value={result.id}
-                              onChange={() => setSelectedTrackId(result.id)}
+                              onChange={() => handleSelectTrack(result.id)}
                             />
                             <Box flex="1">
                               <Flex gap={2} align="center" mb={1} flexWrap="wrap">
@@ -294,24 +320,22 @@ export function TrackMatcher({
       </MotionCard>
 
       {/* アクション */}
-      <HStack justify="space-between">
+      <HStack justify="space-between" align="center">
         <Button variant="outline" onClick={onCancel} borderColor="gray.600" color="gray.300">
           キャンセル
         </Button>
         <HStack>
+          <Button
+            variant="outline"
+            onClick={handleBack}
+            borderColor="gray.600"
+            color="gray.300"
+            isDisabled={currentIndex === 0}
+          >
+            戻る
+          </Button>
           <Button variant="outline" onClick={handleSkip} borderColor="gray.600" color="gray.300">
             スキップ
-          </Button>
-          <Button
-            colorScheme="green"
-            onClick={handleNext}
-            disabled={!selectedTrackId}
-            _disabled={{
-              opacity: 0.5,
-              cursor: 'not-allowed',
-            }}
-          >
-            {currentIndex < totalSongs - 1 ? '次へ' : '完了'}
           </Button>
         </HStack>
       </HStack>
