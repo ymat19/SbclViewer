@@ -271,14 +271,14 @@ export function TrackMatcher({
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, y: -10 }}
                         transition={{ duration: 0.2, delay: index * 0.03 }}
-                        variant={selectedTrackId === result.id ? 'elevated' : 'outline'}
+                        variant="outline"
                         borderWidth="1px"
-                        borderColor={selectedTrackId === result.id ? 'green.600' : 'gray.700'}
-                        bg={selectedTrackId === result.id ? 'green.950' : 'gray.800'}
+                        borderColor={result.confidence === 'exact' ? 'green.600' : 'gray.700'}
+                        bg={result.confidence === 'exact' ? 'green.950' : 'gray.800'}
                         onClick={() => handleSelectTrack(result.id)}
                         cursor="pointer"
                         _hover={{
-                          borderColor: selectedTrackId === result.id ? 'green.500' : 'gray.600',
+                          borderColor: result.confidence === 'exact' ? 'green.500' : 'gray.600',
                         }}
                       >
                         <Card.Body py={3}>
