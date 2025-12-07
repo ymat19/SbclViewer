@@ -14,11 +14,11 @@ import {
   IconButton,
 } from '@chakra-ui/react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useEffect, useState } from 'react';
 import { Play, Pause } from 'lucide-react';
+import { useEffect, useState } from 'react';
 
-import { useTrackSearch } from '@/hooks/useTrackSearch';
 import { useAudioPreview } from '@/hooks/useAudioPreview';
+import { useTrackSearch } from '@/hooks/useTrackSearch';
 import type { TrackSearchResult } from '@/services/music/types';
 import type { Anime } from '@/types/anime';
 import type { DraftTrack } from '@/types/playlist';
@@ -43,6 +43,7 @@ function formatDuration(durationMs: number): string {
   const totalSeconds = Math.floor(durationMs / 1000);
   const minutes = Math.floor(totalSeconds / 60);
   const seconds = totalSeconds % 60;
+
   return `${minutes}:${seconds.toString().padStart(2, '0')}`;
 }
 
@@ -372,7 +373,8 @@ export function TrackMatcher({
                               <Text fontSize="sm" color="fg.muted">
                                 {result.artist}
                                 {result.durationMs && ` • ${formatDuration(result.durationMs)}`}
-                                {result.releaseDate && ` • ${formatReleaseDate(result.releaseDate)}`}
+                                {result.releaseDate &&
+                                  ` • ${formatReleaseDate(result.releaseDate)}`}
                               </Text>
                             </Box>
                           </Flex>

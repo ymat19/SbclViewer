@@ -245,7 +245,7 @@ export class SpotifyMusicService implements MusicService {
         }
 
         // 結果が0件だった場合、タイトルのみで再検索（フォールバック）
-        console.log(
+        console.warn(
           `No results found for "${cleanedTrackName}" by "${query.artist}", falling back to title-only search`,
         );
       }
