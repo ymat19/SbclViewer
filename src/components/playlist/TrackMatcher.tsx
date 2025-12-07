@@ -316,7 +316,6 @@ export function TrackMatcher({
                               </Flex>
                               <Text fontSize="sm" color="fg.muted">
                                 {result.artist}
-                                {result.album && ` • ${result.album}`}
                               </Text>
                             </Box>
                           </Flex>
