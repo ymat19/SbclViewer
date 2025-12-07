@@ -3,7 +3,11 @@ import { createSystem, defaultConfig, defineConfig, defineSemanticTokens } from 
 const semanticTokens = defineSemanticTokens({
   colors: {
     'fg.default': { value: { base: '{colors.gray.900}', _dark: '{colors.white}' } },
-    'fg.muted': { value: { base: '{colors.gray.700}', _dark: '{colors.gray.300}' } },
+    'fg.muted': { value: { base: '{colors.gray.600}', _dark: '{colors.gray.300}' } },
+    'bg.canvas': { value: { base: '{colors.gray.50}', _dark: '{colors.gray.900}' } },
+    'bg.surface': { value: { base: '{colors.white}', _dark: '{colors.gray.800}' } },
+    'bg.subtle': { value: { base: '{colors.gray.100}', _dark: '{colors.gray.850}' } },
+    'border.default': { value: { base: '{colors.gray.200}', _dark: '{colors.gray.700}' } },
   },
 });
 

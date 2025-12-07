@@ -22,9 +22,11 @@ import {
   ToastActionTrigger,
 } from '@chakra-ui/react';
 import { AnimatePresence } from 'framer-motion';
+import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Suspense, useEffect, useState } from 'react';
+import { Suspense, useMemo, useState } from 'react';
 
+import animeDataJson from '@/../public/data.json';
 import { AnimeDetailDialog } from '@/components/AnimeDetailDialog';
 import { SwipeableAnimeItem } from '@/components/SwipeableAnimeItem';
 import { ColorModeButton } from '@/components/ui/color-mode';
@@ -40,12 +42,20 @@ const toaster = createToaster({
 function HomeContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const [animeData, setAnimeData] = useState<Anime[]>([]);
-  const [quarters, setQuarters] = useState<string[]>([]);
   const [currentTab, setCurrentTab] = useState<ViewTab>('unselected');
   const { statuses: animeStatuses, setStatus: setAnimeStatus } = useAnimeStatuses();
   const [selectedAnime, setSelectedAnime] = useState<Anime | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const animeData = animeDataJson as Anime[];
+  const quarters = useMemo(
+    () => Array.from(new Set(animeData.map((anime) => anime.quarter))).sort(),
+    [animeData],
+  );
+  const selectedQuarterParam = searchParams.get('quarter');
+  const defaultQuarter =
+    quarters.find((q) => q === '2010q1') ?? quarters[quarters.length - 1] ?? '';
+  const selectedQuarter = selectedQuarterParam ?? defaultQuarter;
+  const playlistHref = `/playlist${selectedQuarter ? `?quarter=${encodeURIComponent(selectedQuarter)}` : ''}`;
 
   // Enhanced setStatus with undo functionality
   const handleSetStatus = (id: string, newStatus: AnimeStatus | null) => {
@@ -74,10 +84,6 @@ function HomeContent() {
       },
     });
   };
-  const [isLoading, setIsLoading] = useState(true);
-
-  // Get selected quarter from URL or use latest
-  const selectedQuarter = searchParams.get('quarter') || '';
 
   // Update URL when quarter changes
   const setSelectedQuarter = (quarter: string) => {
@@ -112,36 +118,6 @@ function HomeContent() {
     setIsDialogOpen(false);
     setSelectedAnime(null);
   };
-
-  // Load anime data
-  useEffect(() => {
-    fetch('/data.json')
-      .then((res) => res.json())
-      .then((data: Anime[]) => {
-        setAnimeData(data);
-
-        // Extract unique quarters and sort them
-        const uniqueQuarters = Array.from(new Set(data.map((anime) => anime.quarter))).sort();
-        setQuarters(uniqueQuarters);
-
-        // Set default to 2010q1 if not in URL
-        if (uniqueQuarters.length > 0 && !searchParams.get('quarter')) {
-          const params = new URLSearchParams(searchParams.toString());
-          const defaultQuarter = uniqueQuarters.includes('2010q1')
-            ? '2010q1'
-            : uniqueQuarters[uniqueQuarters.length - 1];
-          params.set('quarter', defaultQuarter as string);
-          router.replace(`?${params.toString()}`);
-        }
-
-        setIsLoading(false);
-      })
-      .catch((error) => {
-        console.error('Failed to load anime data:', error);
-        setIsLoading(false);
-      });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
 
   // Filter anime by selected quarter and exclude anime without songs
   const quarterAnime = animeData.filter(
@@ -180,17 +156,6 @@ function HomeContent() {
     (anime) => animeStatuses.get(anime.id) === 'watched',
   ).length;
 
-  if (isLoading) {
-    return (
-      <Flex minH="100vh" alignItems="center" justifyContent="center">
-        <VStack gap={4}>
-          <Spinner size="xl" color="blue.500" />
-          <Text color="fg.muted">Loading...</Text>
-        </VStack>
-      </Flex>
-    );
-  }
-
   return (
     <>
       <Toaster toaster={toaster}>
@@ -213,14 +178,19 @@ function HomeContent() {
         )}
       </Toaster>
       <AnimeDetailDialog anime={selectedAnime} open={isDialogOpen} onClose={handleCloseDialog} />
-      <Box minH="100vh" bg="gray.50" _dark={{ bg: 'gray.900' }} py={4} px={4}>
+      <Box minH="100vh" bg="bg.canvas" color="fg.default" py={4} px={4}>
         <Container maxW="6xl">
           <VStack gap={6} align="stretch">
             <Flex justify="space-between" align="center" gap={4}>
               <Heading as="h1" size={{ base: 'lg', md: '2xl' }}>
                 Anime Song Playlist Creator
               </Heading>
-              <ColorModeButton />
+              <Flex gap={2} align="center">
+                <Button asChild colorScheme="blue" size={{ base: 'sm', md: 'md' }}>
+                  <Link href={playlistHref}>プレイリストを作成</Link>
+                </Button>
+                <ColorModeButton />
+              </Flex>
             </Flex>
 
             {/* Quarter Selector */}
@@ -242,9 +212,8 @@ function HomeContent() {
                   <NativeSelectField
                     value={selectedQuarter}
                     onChange={(e) => setSelectedQuarter(e.target.value)}
-                    bg="white"
+                    bg="bg.surface"
                     color="fg.default"
-                    _dark={{ bg: 'gray.800', color: 'fg.default' }}
                   >
                     {quarters.map((quarter) => (
                       <option key={quarter} value={quarter}>
@@ -304,7 +273,13 @@ function HomeContent() {
                 </Tabs.List>
 
                 <Tabs.Content value={currentTab} pt={4}>
-                  <Card.Root maxH="md" overflowY="auto" bg="white" _dark={{ bg: 'gray.800' }}>
+                  <Card.Root
+                    maxH="md"
+                    overflowY="auto"
+                    bg="bg.surface"
+                    borderWidth="1px"
+                    borderColor="border.default"
+                  >
                     {filteredAnime.length === 0 ? (
                       <Card.Body>
                         <Text color="fg.muted">このクォーターに該当する作品がありません。</Text>
@@ -345,7 +320,7 @@ function HomeContent() {
                   {allSongs.length} songs
                 </Badge>
               </Flex>
-              <Card.Root bg="white" _dark={{ bg: 'gray.800' }}>
+              <Card.Root bg="bg.surface" borderWidth="1px" borderColor="border.default">
                 {allSongs.length === 0 ? (
                   <Card.Body>
                     <Text color="fg.muted">
