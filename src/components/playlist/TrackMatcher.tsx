@@ -62,11 +62,15 @@ export function TrackMatcher({
   const totalSongs = allSongs.length;
   const currentSong = allSongs[currentIndex];
 
-  // 初期状態の再同期（編集開始位置の変更にも対応）
+  // プロップ変化時にドラフトを同期
   useEffect(() => {
     setMatchedTracks(initialTracks);
+  }, [initialTracks]);
+
+  // 開始インデックスだけ同期
+  useEffect(() => {
     setCurrentIndex(Math.min(startIndex, Math.max(0, totalSongs - 1)));
-  }, [initialTracks, startIndex, totalSongs]);
+  }, [startIndex, totalSongs]);
 
   // 楽曲検索を実行
   useEffect(() => {
@@ -98,14 +102,15 @@ export function TrackMatcher({
   const upsertDraftAndMaybeComplete = (draftTrack: DraftTrack) => {
     const nextTracks = [...matchedTracks];
     nextTracks[currentIndex] = draftTrack;
+    setMatchedTracks(nextTracks);
 
     const isLast = currentIndex >= totalSongs - 1;
     if (singleEdit || isLast) {
       onComplete(nextTracks);
-    } else {
-      setMatchedTracks(nextTracks);
-      setCurrentIndex(currentIndex + 1);
+      return;
     }
+
+    setCurrentIndex(currentIndex + 1);
   };
 
   const handleSelectTrack = (trackId: string) => {
@@ -301,11 +306,11 @@ export function TrackMatcher({
                             />
                             <Box flex="1">
                               <Flex gap={2} align="center" mb={1} flexWrap="wrap">
-                                <Text
-                                  fontWeight="medium"
-                                  color="fg.default"
-                                  fontSize="sm"
-                                >
+                              <Text
+                                fontWeight="medium"
+                                color="fg.default"
+                                fontSize="sm"
+                              >
                                   {result.name}
                                 </Text>
                                 {result.confidence === 'exact' && (
@@ -314,7 +319,7 @@ export function TrackMatcher({
                                   </Badge>
                                 )}
                               </Flex>
-                              <Text fontSize="sm" color="gray.400">
+                              <Text fontSize="sm" color="fg.muted">
                                 {result.artist}
                                 {result.album && ` • ${result.album}`}
                               </Text>

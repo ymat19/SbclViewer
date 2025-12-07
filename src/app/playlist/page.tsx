@@ -106,10 +106,12 @@ export default function PlaylistPage() {
       const existingDraft = drafts.get(selectedQuarter);
       if (existingDraft) {
         setMatchedTracks(existingDraft.tracks);
+        if (existingDraft.songFilter) {
+          setSongFilter(existingDraft.songFilter);
+        }
       }
     }
     setCurrentStep('selector');
-    setSelectedQuarter(null);
     setIsEditingTrack(false);
     setMatchStartIndex(0);
   };
