@@ -175,16 +175,38 @@ export class SpotifyMusicService implements MusicService {
   }
 
   /**
+   * trackNameから不要なプレフィックスを除去
+   */
+  private cleanTrackName(trackName: string): string {
+    // 「オープニングテーマ」「エンディングテーマ」などのプレフィックスを除去
+    let cleaned = trackName.replace(
+      /^(オープニングテーマ|エンディングテーマ|挿入歌|主題歌|イメージソング|キャラクターソング|劇中歌)/,
+      '',
+    );
+
+    // 括弧で囲まれた部分を抽出（「曲名」 → 曲名）
+    const bracketMatch = cleaned.match(/[「『【](.+?)[」』】]/);
+    if (bracketMatch) {
+      cleaned = bracketMatch[1];
+    }
+
+    return cleaned.trim();
+  }
+
+  /**
    * 楽曲を検索
    */
   async searchTrack(query: TrackSearchQuery): Promise<TrackSearchResult[]> {
     try {
       const accessToken = await this.getValidAccessToken();
 
+      // trackNameをクリーンアップ
+      const cleanedTrackName = this.cleanTrackName(query.trackName);
+
       // 検索クエリを構築
       const q = query.artist
-        ? `track:${query.trackName} artist:${query.artist}`
-        : `track:${query.trackName}`;
+        ? `track:${cleanedTrackName} artist:${query.artist}`
+        : `track:${cleanedTrackName}`;
 
       const params = new URLSearchParams({
         q,
