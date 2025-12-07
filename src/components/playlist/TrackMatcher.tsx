@@ -121,11 +121,37 @@ export function TrackMatcher({
       const results = await searchTrack(currentSong.song);
       setSearchResults(results);
 
-      // 自動マッチング可能な場合は自動選択
+      // 自動マッチング可能な場合は自動選択して次に進む
       if (canAutoMatch(results)) {
         const autoMatch = getAutoMatchResult(results);
         if (autoMatch) {
           setSelectedTrackId(autoMatch.id);
+
+          // 自動的に選択して次の曲に進む
+          const draftTrack: DraftTrack = {
+            animeId: currentSong.animeId,
+            animeName: currentSong.animeName,
+            song: currentSong.song,
+            matchStatus: 'auto',
+            selectedTrack: autoMatch,
+            candidates: results,
+          };
+
+          const nextTracks = [...matchedTracks];
+          nextTracks[currentIndex] = draftTrack;
+          setMatchedTracks(nextTracks);
+
+          const isLast = currentIndex >= totalSongs - 1;
+          if (singleEdit || isLast) {
+            setIsSearching(false);
+            onComplete(nextTracks);
+            return;
+          }
+
+          // 次の曲に進む
+          setIsSearching(false);
+          setCurrentIndex(currentIndex + 1);
+          return;
         }
       }
 
