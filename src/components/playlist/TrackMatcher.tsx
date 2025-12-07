@@ -347,7 +347,7 @@ export function TrackMatcher({
             onClick={handleBack}
             borderColor="border.default"
             color="fg.default"
-            isDisabled={currentIndex === 0}
+            disabled={currentIndex === 0}
           >
             戻る
           </Button>
