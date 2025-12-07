@@ -1,5 +1,6 @@
 import { useState } from 'react';
 
+import { cleanTrackName } from '@/lib/music/trackName';
 import { getMusicServiceInstance } from '@/services/music';
 import type { TrackSearchQuery, TrackSearchResult } from '@/services/music/types';
 import type { Song } from '@/types/anime';
@@ -19,7 +20,9 @@ function normalizeString(str: string): string {
  * 完全一致かどうかを判定
  */
 function isExactMatch(query: TrackSearchQuery, result: TrackSearchResult): boolean {
-  const trackMatch = normalizeString(query.trackName) === normalizeString(result.name);
+  // trackNameをクリーンアップしてから比較
+  const cleanedQueryTrackName = cleanTrackName(query.trackName);
+  const trackMatch = normalizeString(cleanedQueryTrackName) === normalizeString(result.name);
 
   if (!query.artist) return trackMatch;
 
@@ -45,11 +48,25 @@ export function useTrackSearch() {
 
       const results = await musicService.searchTrack(query);
 
-      // 完全一致のものがあれば confidence を 'exact' に設定
-      return results.map((result) => ({
-        ...result,
-        confidence: isExactMatch(query, result) ? 'exact' : result.confidence,
-      }));
+      // 完全一致のものを探す（最初の1件のみ）
+      let exactMatchFound = false;
+      return results.map((result) => {
+        const isExact = isExactMatch(query, result);
+
+        // 完全一致が複数ある場合、最初の1件だけを 'exact' とする
+        if (isExact && !exactMatchFound) {
+          exactMatchFound = true;
+          return {
+            ...result,
+            confidence: 'exact' as const,
+          };
+        }
+
+        return {
+          ...result,
+          confidence: result.confidence,
+        };
+      });
     } catch (error) {
       console.error('Failed to search track:', error);
       return [];
