@@ -20,12 +20,12 @@ function normalizeString(str: string): string {
  * 完全一致かどうかを判定
  */
 function isExactMatch(query: TrackSearchQuery, result: TrackSearchResult): boolean {
+  // アーティスト情報がない場合は完全一致としない（精度が低いため）
+  if (!query.artist) return false;
+
   // trackNameをクリーンアップしてから比較
   const cleanedQueryTrackName = cleanTrackName(query.trackName);
   const trackMatch = normalizeString(cleanedQueryTrackName) === normalizeString(result.name);
-
-  if (!query.artist) return trackMatch;
-
   const artistMatch = normalizeString(query.artist) === normalizeString(result.artist);
 
   return trackMatch && artistMatch;
