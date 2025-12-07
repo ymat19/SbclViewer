@@ -244,8 +244,8 @@ export function TrackMatcher({
 
   const progress = ((currentIndex + 1) / totalSongs) * 100;
 
-  // 楽曲情報と検索結果を表示するかどうか（検索完了かつ結果がある場合のみ）
-  const shouldShowContent = !isSearching && searchResults.length > 0;
+  // 楽曲情報と検索結果を表示するかどうか（検索完了時）
+  const shouldShowContent = !isSearching;
 
   return (
     <VStack gap={6} align="stretch">
