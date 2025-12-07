@@ -227,7 +227,13 @@ export function TrackConfirmation({
 
       {/* アクション */}
       <HStack justify="space-between">
-        <Button variant="outline" onClick={onCancel} borderColor="gray.600" color="gray.300">
+        <Button
+          variant="outline"
+          colorScheme="gray"
+          onClick={onCancel}
+          borderColor="border.default"
+          color="fg.default"
+        >
           キャンセル
         </Button>
         <Button colorScheme="green" onClick={onSave} px={8}>

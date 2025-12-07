@@ -37,6 +37,8 @@ export default function PlaylistPage() {
   const [selectedQuarter, setSelectedQuarter] = useState<string | null>(null);
   const [matchedTracks, setMatchedTracks] = useState<DraftTrack[]>([]);
   const [songFilter, setSongFilter] = useState<SongFilterMode>('oped');
+  const [matchStartIndex, setMatchStartIndex] = useState(0);
+  const [isEditingTrack, setIsEditingTrack] = useState(false);
   const animeData = animeDataJson as Anime[];
   const filterSongs = useCallback(
     (songs: Anime['songs']) =>
@@ -65,15 +67,21 @@ export default function PlaylistPage() {
       if (existingDraft.songFilter) {
         setSongFilter(existingDraft.songFilter);
       }
+      setMatchStartIndex(0);
+      setIsEditingTrack(false);
+      setCurrentStep(existingDraft.tracks.length > 0 ? 'confirmation' : 'matcher');
     } else {
       setMatchedTracks([]);
+      setMatchStartIndex(0);
+      setIsEditingTrack(false);
+      setCurrentStep('matcher');
     }
-    setCurrentStep('matcher');
   };
 
   const handleMatchingComplete = (tracks: DraftTrack[]) => {
     setMatchedTracks(tracks);
     setCurrentStep('confirmation');
+    setIsEditingTrack(false);
   };
 
   const handleSave = () => {
@@ -94,14 +102,22 @@ export default function PlaylistPage() {
   };
 
   const handleCancel = () => {
+    if (selectedQuarter) {
+      const existingDraft = drafts.get(selectedQuarter);
+      if (existingDraft) {
+        setMatchedTracks(existingDraft.tracks);
+      }
+    }
     setCurrentStep('selector');
     setSelectedQuarter(null);
-    setMatchedTracks([]);
+    setIsEditingTrack(false);
+    setMatchStartIndex(0);
   };
 
   const handleEditTrack = (index: number) => {
-    // TODO: 個別の楽曲を再選択する機能（Phase 4で実装）
-    console.log('Edit track at index:', index);
+    setMatchStartIndex(index);
+    setIsEditingTrack(true);
+    setCurrentStep('matcher');
   };
 
   const incomingQuarter = searchParams.get('quarter');
@@ -265,6 +281,8 @@ export default function PlaylistPage() {
               onComplete={handleMatchingComplete}
               onCancel={handleCancel}
               initialTracks={matchedTracks}
+              startIndex={matchStartIndex}
+              singleEdit={isEditingTrack}
             />
           )}
 

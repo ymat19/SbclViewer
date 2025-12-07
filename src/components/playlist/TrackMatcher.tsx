@@ -26,6 +26,8 @@ interface TrackMatcherProps {
   onComplete: (tracks: DraftTrack[]) => void;
   onCancel: () => void;
   initialTracks?: DraftTrack[];
+  startIndex?: number;
+  singleEdit?: boolean;
 }
 
 const MotionBox = motion.create(Box);
@@ -37,10 +39,12 @@ export function TrackMatcher({
   onComplete,
   onCancel,
   initialTracks = [],
+  startIndex = 0,
+  singleEdit = false,
 }: TrackMatcherProps) {
   const { searchTrack, canAutoMatch, getAutoMatchResult } = useTrackSearch();
 
-  const [currentIndex, setCurrentIndex] = useState(0);
+  const [currentIndex, setCurrentIndex] = useState(startIndex);
   const [matchedTracks, setMatchedTracks] = useState<DraftTrack[]>(initialTracks);
   const [isSearching, setIsSearching] = useState(false);
   const [searchResults, setSearchResults] = useState<TrackSearchResult[]>([]);
@@ -57,6 +61,12 @@ export function TrackMatcher({
 
   const totalSongs = allSongs.length;
   const currentSong = allSongs[currentIndex];
+
+  // 初期状態の再同期（編集開始位置の変更にも対応）
+  useEffect(() => {
+    setMatchedTracks(initialTracks);
+    setCurrentIndex(Math.min(startIndex, Math.max(0, totalSongs - 1)));
+  }, [initialTracks, startIndex, totalSongs]);
 
   // 楽曲検索を実行
   useEffect(() => {
@@ -90,7 +100,7 @@ export function TrackMatcher({
     nextTracks[currentIndex] = draftTrack;
 
     const isLast = currentIndex >= totalSongs - 1;
-    if (isLast) {
+    if (singleEdit || isLast) {
       onComplete(nextTracks);
     } else {
       setMatchedTracks(nextTracks);
@@ -128,16 +138,7 @@ export function TrackMatcher({
       candidates: searchResults,
     };
 
-    const nextTracks = [...matchedTracks];
-    nextTracks[currentIndex] = draftTrack;
-
-    const isLast = currentIndex >= totalSongs - 1;
-    if (isLast) {
-      onComplete(nextTracks);
-    } else {
-      setMatchedTracks(nextTracks);
-      setCurrentIndex(currentIndex + 1);
-    }
+    upsertDraftAndMaybeComplete(draftTrack);
   };
 
   const handleBack = () => {
@@ -148,7 +149,7 @@ export function TrackMatcher({
     setSelectedTrackId(prevDraft?.selectedTrack?.id ?? null);
   };
 
-  // 過去の選択を復元（戻る時用）
+  // 過去の選択を復元（戻る時/編集開始時用）
   useEffect(() => {
     const draft = matchedTracks[currentIndex];
     if (draft?.selectedTrack) {
