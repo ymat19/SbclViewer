@@ -203,11 +203,50 @@ export class SpotifyMusicService implements MusicService {
       // trackNameをクリーンアップ
       const cleanedTrackName = this.cleanTrackName(query.trackName);
 
-      // 検索クエリを構築
-      const q = query.artist
-        ? `track:${cleanedTrackName} artist:${query.artist}`
-        : `track:${cleanedTrackName}`;
+      // まずアーティストを含めて検索（アーティストが指定されている場合）
+      if (query.artist) {
+        const qWithArtist = `track:${cleanedTrackName} artist:${query.artist}`;
+        const paramsWithArtist = new URLSearchParams({
+          q: qWithArtist,
+          type: 'track',
+          limit: '10',
+        });
 
+        const responseWithArtist = await fetch(
+          `${this.apiBase}/search?${paramsWithArtist.toString()}`,
+          {
+            headers: {
+              Authorization: `Bearer ${accessToken}`,
+            },
+          },
+        );
+
+        if (!responseWithArtist.ok) {
+          throw new Error(`Search failed: ${responseWithArtist.statusText}`);
+        }
+
+        const dataWithArtist: SpotifySearchResponse = await responseWithArtist.json();
+
+        // 結果が見つかった場合はそれを返す
+        if (dataWithArtist.tracks.items.length > 0) {
+          return dataWithArtist.tracks.items.map((track) => ({
+            id: track.id,
+            name: track.name,
+            artist: track.artists.map((a) => a.name).join(', '),
+            album: track.album.name,
+            uri: track.uri,
+            confidence: 'partial' as const, // 完全一致判定はuseTrackSearchで行う
+          }));
+        }
+
+        // 結果が0件だった場合、タイトルのみで再検索（フォールバック）
+        console.log(
+          `No results found for "${cleanedTrackName}" by "${query.artist}", falling back to title-only search`,
+        );
+      }
+
+      // タイトルのみで検索
+      const q = `track:${cleanedTrackName}`;
       const params = new URLSearchParams({
         q,
         type: 'track',
