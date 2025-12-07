@@ -27,8 +27,9 @@ interface SpotifySearchResponse {
       id: string;
       name: string;
       artists: Array<{ name: string }>;
-      album: { name: string };
+      album: { name: string; release_date: string };
       uri: string;
+      duration_ms: number;
     }>;
   };
 }
@@ -236,6 +237,8 @@ export class SpotifyMusicService implements MusicService {
             album: track.album.name,
             uri: track.uri,
             confidence: 'partial' as const, // 完全一致判定はuseTrackSearchで行う
+            durationMs: track.duration_ms,
+            releaseDate: track.album.release_date,
           }));
         }
 
@@ -273,6 +276,8 @@ export class SpotifyMusicService implements MusicService {
         album: track.album.name,
         uri: track.uri,
         confidence: 'partial' as const, // 完全一致判定はuseTrackSearchで行う
+        durationMs: track.duration_ms,
+        releaseDate: track.album.release_date,
       }));
     } catch (error) {
       console.error('Track search failed:', error);

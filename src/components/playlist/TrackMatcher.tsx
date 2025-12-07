@@ -33,6 +33,34 @@ interface TrackMatcherProps {
 const MotionBox = motion.create(Box);
 const MotionCard = motion.create(Card.Root);
 
+/**
+ * ミリ秒を分:秒形式に変換
+ */
+function formatDuration(durationMs: number): string {
+  const totalSeconds = Math.floor(durationMs / 1000);
+  const minutes = Math.floor(totalSeconds / 60);
+  const seconds = totalSeconds % 60;
+  return `${minutes}:${seconds.toString().padStart(2, '0')}`;
+}
+
+/**
+ * リリース日をフォーマット
+ */
+function formatReleaseDate(releaseDate: string): string {
+  // Spotify APIは "YYYY-MM-DD", "YYYY-MM", "YYYY" のいずれかの形式で返す
+  const parts = releaseDate.split('-');
+  if (parts.length === 3) {
+    // YYYY-MM-DD
+    return `${parts[0]}/${parts[1]}/${parts[2]}`;
+  } else if (parts.length === 2) {
+    // YYYY-MM
+    return `${parts[0]}/${parts[1]}`;
+  } else {
+    // YYYY
+    return parts[0];
+  }
+}
+
 export function TrackMatcher({
   animeList,
   onComplete,
@@ -316,6 +344,8 @@ export function TrackMatcher({
                               </Flex>
                               <Text fontSize="sm" color="fg.muted">
                                 {result.artist}
+                                {result.durationMs && ` • ${formatDuration(result.durationMs)}`}
+                                {result.releaseDate && ` • ${formatReleaseDate(result.releaseDate)}`}
                               </Text>
                             </Box>
                           </Flex>
