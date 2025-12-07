@@ -10,7 +10,7 @@ import {
   Spinner,
   HStack,
   RadioGroup,
-  ProgressRoot,
+  Progress,
   IconButton,
 } from '@chakra-ui/react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -263,7 +263,11 @@ export function TrackMatcher({
             {currentIndex + 1} / {totalSongs}
           </Text>
         </Flex>
-        <ProgressRoot value={progress} colorScheme="green" borderRadius="md" h="6px" />
+        <Progress.Root value={progress} colorPalette="green" size="md">
+          <Progress.Track>
+            <Progress.Range />
+          </Progress.Track>
+        </Progress.Root>
       </MotionBox>
 
       {/* スキップ通知 */}
