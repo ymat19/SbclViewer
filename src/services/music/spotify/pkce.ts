@@ -6,7 +6,7 @@
 /**
  * ランダムな文字列を生成（Code Verifier用）
  */
-function generateRandomString(length: number): string {
+export function generateRandomString(length: number): string {
   const possible = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
   const values = crypto.getRandomValues(new Uint8Array(length));
 
