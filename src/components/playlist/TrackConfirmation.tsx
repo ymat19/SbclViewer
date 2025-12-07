@@ -42,10 +42,10 @@ export function TrackConfirmation({
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.3 }}
       >
-        <Heading size="lg" mb={2} color="white">
+        <Heading size="lg" mb={2}>
           確認画面
         </Heading>
-        <Text color="gray.400" fontSize="sm">
+        <Text color="fg.muted" fontSize="sm">
           マッチング結果を確認してください。誤った選択があれば「再選択」から修正できます。
         </Text>
       </MotionBox>
@@ -55,22 +55,22 @@ export function TrackConfirmation({
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.3, delay: 0.1 }}
-        bg="gray.800"
+        bg="bg.surface"
         borderWidth="1px"
-        borderColor="gray.700"
+        borderColor="border.default"
       >
         <Card.Body>
           <HStack gap={6} justify="center" flexWrap="wrap">
             <Box textAlign="center">
-              <Text fontSize="xs" color="gray.400" mb={1} fontWeight="medium">
+              <Text fontSize="xs" color="fg.muted" mb={1} fontWeight="medium">
                 総楽曲数
               </Text>
-              <Text fontSize="3xl" fontWeight="bold" color="white">
+              <Text fontSize="3xl" fontWeight="bold">
                 {tracks.length}
               </Text>
             </Box>
             <Box textAlign="center">
-              <Text fontSize="xs" color="gray.400" mb={1} fontWeight="medium">
+              <Text fontSize="xs" color="fg.muted" mb={1} fontWeight="medium">
                 マッチング済み
               </Text>
               <Text fontSize="3xl" fontWeight="bold" color="green.400">
@@ -78,7 +78,7 @@ export function TrackConfirmation({
               </Text>
             </Box>
             <Box textAlign="center">
-              <Text fontSize="xs" color="gray.400" mb={1} fontWeight="medium">
+              <Text fontSize="xs" color="fg.muted" mb={1} fontWeight="medium">
                 スキップ
               </Text>
               <Text fontSize="3xl" fontWeight="bold" color="gray.500">
@@ -96,7 +96,7 @@ export function TrackConfirmation({
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.3, delay: 0.2 }}
         >
-          <Heading size="md" mb={3} color="gray.200">
+          <Heading size="md" mb={3}>
             マッチング済み楽曲 ({matchedTracks.length})
           </Heading>
           <VStack gap={2} align="stretch">
@@ -110,9 +110,9 @@ export function TrackConfirmation({
                   transition={{ duration: 0.2, delay: index * 0.02 }}
                 >
                   <Card.Root
-                    bg="gray.800"
+                    bg="bg.surface"
                     borderWidth="1px"
-                    borderColor="gray.700"
+                    borderColor="border.default"
                     borderLeftWidth="3px"
                     borderLeftColor="green.600"
                   >
@@ -137,11 +137,11 @@ export function TrackConfirmation({
                               </Badge>
                             )}
                           </Flex>
-                          <Text fontWeight="semibold" mb={1} color="white" fontSize="sm">
+                          <Text fontWeight="semibold" mb={1} color="fg.default" fontSize="sm">
                             {track.song.trackName}
                           </Text>
                           {track.selectedTrack && (
-                            <Text fontSize="sm" color="gray.400">
+                            <Text fontSize="sm" color="fg.muted">
                               → {track.selectedTrack.name} - {track.selectedTrack.artist}
                             </Text>
                           )}
@@ -150,8 +150,8 @@ export function TrackConfirmation({
                           size="sm"
                           variant="outline"
                           onClick={() => onEditTrack(originalIndex)}
-                          borderColor="gray.600"
-                          color="gray.300"
+                          borderColor="border.default"
+                          color="fg.default"
                         >
                           再選択
                         </Button>
@@ -172,7 +172,7 @@ export function TrackConfirmation({
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.3, delay: 0.3 }}
         >
-          <Heading size="md" mb={3} color="gray.200">
+          <Heading size="md" mb={3}>
             スキップした楽曲 ({skippedTracks.length})
           </Heading>
           <VStack gap={2} align="stretch">
@@ -186,9 +186,9 @@ export function TrackConfirmation({
                   transition={{ duration: 0.2, delay: index * 0.02 }}
                 >
                   <Card.Root
-                    bg="gray.800"
+                    bg="bg.surface"
                     borderWidth="1px"
-                    borderColor="gray.700"
+                    borderColor="border.default"
                     opacity={0.7}
                   >
                     <Card.Body py={3}>
@@ -202,7 +202,7 @@ export function TrackConfirmation({
                               {track.song.type}
                             </Badge>
                           </Flex>
-                          <Text fontWeight="medium" color="gray.400" fontSize="sm">
+                          <Text fontWeight="medium" color="fg.muted" fontSize="sm">
                             {track.song.trackName}
                           </Text>
                         </Box>
@@ -210,8 +210,8 @@ export function TrackConfirmation({
                           size="sm"
                           variant="outline"
                           onClick={() => onEditTrack(originalIndex)}
-                          borderColor="gray.600"
-                          color="gray.400"
+                          borderColor="border.default"
+                          color="fg.default"
                         >
                           再選択
                         </Button>

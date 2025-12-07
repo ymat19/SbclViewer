@@ -111,12 +111,12 @@ export default function PlaylistPage() {
       : [];
 
   return (
-    <Box minH="100vh" bg="gray.950" py={6} px={4}>
+    <Box minH="100vh" bg="bg.canvas" color="fg.default" py={6} px={4}>
       <Container maxW="6xl">
         <VStack gap={6} align="stretch">
           {/* ヘッダー */}
           <Flex justify="space-between" align="center" gap={4}>
-            <Heading as="h1" size={{ base: 'lg', md: '2xl' }} color="white">
+            <Heading as="h1" size={{ base: 'lg', md: '2xl' }}>
               プレイリスト作成
             </Heading>
             <Flex gap={2} align="center">
@@ -125,8 +125,8 @@ export default function PlaylistPage() {
                   as="a"
                   variant="outline"
                   size={{ base: 'sm', md: 'md' }}
-                  borderColor="gray.600"
-                  color="gray.300"
+                  borderColor={{ base: 'gray.200', _dark: 'gray.600' }}
+                  color="fg.default"
                 >
                   通常モードに戻る
                 </Button>
@@ -137,12 +137,16 @@ export default function PlaylistPage() {
 
           {/* 説明 */}
           {currentStep === 'selector' && (
-            <Card.Root bg="gray.800" borderWidth="1px" borderColor="gray.700">
+            <Card.Root
+              bg="bg.surface"
+              borderWidth="1px"
+              borderColor="border.default"
+            >
               <Card.Body>
-                <Text mb={2} fontWeight="semibold" color="gray.200" fontSize="sm">
+                <Text mb={2} fontWeight="semibold" fontSize="sm" color="fg.default">
                   プレイリスト作成の流れ
                 </Text>
-                <VStack align="start" gap={1} fontSize="sm" color="gray.400">
+                <VStack align="start" gap={1} fontSize="sm" color="fg.muted">
                   <Text>1. 視聴済みアニメがあるクォーターを選択</Text>
                   <Text>2. 楽曲を検索してマッチング（モックサービス使用中）</Text>
                   <Text>3. 確認画面で楽曲を確定してローカルに保存</Text>
@@ -158,24 +162,33 @@ export default function PlaylistPage() {
               {/* 保存済みドラフト一覧 */}
               {allDrafts.length > 0 && (
                 <Box>
-                  <Heading as="h2" size={{ base: 'md', md: 'lg' }} mb={3} color="gray.200">
-                    保存済みプレイリスト
-                  </Heading>
-                  <Card.Root bg="gray.800" borderWidth="1px" borderColor="gray.700">
-                    <VStack gap={0} align="stretch" divideY="1px" divideColor="gray.700">
+                  <Heading as="h2" size={{ base: 'md', md: 'lg' }} mb={3}>
+                保存済みプレイリスト
+              </Heading>
+              <Card.Root
+                bg="bg.surface"
+                borderWidth="1px"
+                borderColor="border.default"
+              >
+                <VStack
+                  gap={0}
+                  align="stretch"
+                  divideY="1px"
+                  divideColor="border.default"
+                >
                       {allDrafts.map((draft) => (
                         <Box key={draft.quarter} p={4}>
                           <Flex justify="space-between" align="center" gap={4}>
                             <Box>
                               <Flex gap={2} align="center" mb={1}>
-                                <Text fontWeight="semibold" fontSize="md" color="white">
+                                <Text fontWeight="semibold" fontSize="md">
                                   {draft.quarter}
                                 </Text>
                                 <Badge colorScheme="green" fontSize="xs">
                                   {draft.tracks.length} 曲
                                 </Badge>
                               </Flex>
-                              <Text fontSize="sm" color="gray.400">
+                              <Text fontSize="sm" color="fg.muted">
                                 更新: {new Date(draft.updatedAt).toLocaleString('ja-JP')}
                               </Text>
                             </Box>
@@ -196,11 +209,11 @@ export default function PlaylistPage() {
 
               {/* クォーター選択 */}
               <Box>
-                <Heading as="h2" size={{ base: 'md', md: 'lg' }} mb={3} color="gray.200">
+                <Heading as="h2" size={{ base: 'md', md: 'lg' }} mb={3}>
                   新しくプレイリストを作成
                 </Heading>
                 <Box mb={3}>
-                  <Text color="gray.300" fontSize="sm" mb={2}>
+                  <Text color="fg.default" fontSize="sm" mb={2}>
                     対象楽曲
                   </Text>
                   <Flex gap={2} wrap="wrap">
@@ -221,11 +234,11 @@ export default function PlaylistPage() {
                       全ての楽曲
                     </Button>
                   </Flex>
-                  <Text color="gray.500" fontSize="xs" mt={1}>
+                  <Text color="fg.muted" fontSize="xs" mt={1}>
                     OP/EDのみではtypeがOP/EDの曲だけを対象にします。
                   </Text>
                 </Box>
-                <Card.Root bg="gray.800" borderWidth="1px" borderColor="gray.700">
+                <Card.Root bg="bg.surface" borderWidth="1px" borderColor="border.default">
                   <Card.Body>
                     <QuarterSelector
                       animeData={filteredAnimeData}

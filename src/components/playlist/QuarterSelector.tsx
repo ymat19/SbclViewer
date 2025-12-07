@@ -78,22 +78,22 @@ export function QuarterSelector({
             p={4}
             borderWidth="1px"
             borderRadius="md"
-            bg="gray.800"
-            borderColor="gray.700"
-            _hover={{ borderColor: 'gray.600', cursor: 'pointer' }}
+            bg="bg.surface"
+            borderColor="border.default"
+            _hover={{ borderColor: 'border.default', cursor: 'pointer' }}
             onClick={() => onSelectQuarter(quarter)}
           >
             <Flex justify="space-between" align="center" gap={4}>
               <Box flex="1">
                 <Flex gap={2} align="center" mb={1} flexWrap="wrap">
-                  <Text fontWeight="semibold" fontSize="md" color="white">
+                  <Text fontWeight="semibold" fontSize="md" color="fg.default">
                     {quarterToJapaneseName(quarter)}
                   </Text>
                   <Badge colorScheme={statusColor} fontSize="xs">
                     {statusText}
                   </Badge>
                 </Flex>
-                <Flex gap={3} fontSize="sm" color="gray.400" flexWrap="wrap">
+                <Flex gap={3} fontSize="sm" color="fg.muted" flexWrap="wrap">
                   <Text>{quarterAnime.length} 作品</Text>
                   <Text>•</Text>
                   <Text>{totalSongs} 曲</Text>

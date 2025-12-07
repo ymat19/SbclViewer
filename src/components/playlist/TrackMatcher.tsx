@@ -173,10 +173,10 @@ export function TrackMatcher({
         transition={{ duration: 0.3 }}
       >
         <Flex justify="space-between" mb={2} align="center">
-          <Text fontSize="sm" fontWeight="medium" color="gray.400">
+          <Text fontSize="sm" fontWeight="medium" color="fg.muted">
             進捗
           </Text>
-          <Text fontSize="md" fontWeight="semibold" color="gray.300">
+          <Text fontSize="md" fontWeight="semibold">
             {currentIndex + 1} / {totalSongs}
           </Text>
         </Flex>
@@ -188,12 +188,12 @@ export function TrackMatcher({
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.3, delay: 0.1 }}
-        bg="gray.800"
+        bg="bg.surface"
         borderWidth="1px"
-        borderColor="gray.700"
+        borderColor="border.default"
       >
         <Card.Header>
-          <Heading size="sm" color="gray.300" fontWeight="semibold">
+          <Heading size="sm" fontWeight="semibold" color="fg.default">
             楽曲情報
           </Heading>
         </Card.Header>
@@ -207,11 +207,11 @@ export function TrackMatcher({
                 {currentSong.song.type}
               </Badge>
             </Flex>
-            <Text fontWeight="semibold" fontSize="lg" color="white">
+            <Text fontWeight="semibold" fontSize="lg" color="fg.default">
               {currentSong.song.trackName}
             </Text>
             {currentSong.song.artist && (
-              <Text fontSize="sm" color="gray.400">
+              <Text fontSize="sm" color="fg.muted">
                 アーティスト: {currentSong.song.artist}
               </Text>
             )}
@@ -224,29 +224,29 @@ export function TrackMatcher({
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.3, delay: 0.2 }}
-        bg="gray.800"
+        bg="bg.surface"
         borderWidth="1px"
-        borderColor="gray.700"
+        borderColor="border.default"
       >
         <Card.Header>
           <Flex justify="space-between" align="center">
-            <Heading size="sm" color="gray.300" fontWeight="semibold">
+            <Heading size="sm" color="fg.default" fontWeight="semibold">
               マッチング結果
             </Heading>
-            {isSearching && <Spinner size="sm" color="gray.400" />}
+            {isSearching && <Spinner size="sm" color="fg.muted" />}
           </Flex>
         </Card.Header>
         <Card.Body>
           {isSearching ? (
             <Flex justify="center" py={6} direction="column" align="center" gap={3}>
-              <Spinner size="lg" color="gray.400" />
-              <Text color="gray.400" fontSize="sm">
+              <Spinner size="lg" color="fg.muted" />
+              <Text color="fg.muted" fontSize="sm">
                 検索中...
               </Text>
             </Flex>
           ) : searchResults.length === 0 ? (
             <Box py={6} textAlign="center">
-              <Text color="gray.400">楽曲が見つかりませんでした</Text>
+              <Text color="fg.muted">楽曲が見つかりませんでした</Text>
             </Box>
           ) : (
             <VStack align="stretch" gap={3}>
@@ -273,12 +273,23 @@ export function TrackMatcher({
                         transition={{ duration: 0.2, delay: index * 0.03 }}
                         variant="outline"
                         borderWidth="1px"
-                        borderColor={result.confidence === 'exact' ? 'green.600' : 'gray.700'}
-                        bg={result.confidence === 'exact' ? 'green.950' : 'gray.800'}
+                        borderColor={
+                          result.confidence === 'exact'
+                            ? { base: 'green.500', _dark: 'green.600' }
+                            : 'border.default'
+                        }
+                        bg={
+                          result.confidence === 'exact'
+                            ? { base: 'green.50', _dark: 'green.950' }
+                            : 'bg.surface'
+                        }
                         onClick={() => handleSelectTrack(result.id)}
                         cursor="pointer"
                         _hover={{
-                          borderColor: result.confidence === 'exact' ? 'green.500' : 'gray.600',
+                          borderColor:
+                            result.confidence === 'exact'
+                              ? { base: 'green.600', _dark: 'green.500' }
+                              : 'border.default',
                         }}
                       >
                         <Card.Body py={3}>
@@ -291,7 +302,7 @@ export function TrackMatcher({
                               <Flex gap={2} align="center" mb={1} flexWrap="wrap">
                                 <Text
                                   fontWeight="medium"
-                                  color={selectedTrackId === result.id ? 'white' : 'gray.200'}
+                                  color="fg.default"
                                   fontSize="sm"
                                 >
                                   {result.name}
@@ -321,20 +332,30 @@ export function TrackMatcher({
 
       {/* アクション */}
       <HStack justify="space-between" align="center">
-        <Button variant="outline" onClick={onCancel} borderColor="gray.600" color="gray.300">
+        <Button
+          variant="outline"
+          onClick={onCancel}
+          borderColor="border.default"
+          color="fg.default"
+        >
           キャンセル
         </Button>
         <HStack>
           <Button
             variant="outline"
             onClick={handleBack}
-            borderColor="gray.600"
-            color="gray.300"
+            borderColor="border.default"
+            color="fg.default"
             isDisabled={currentIndex === 0}
           >
             戻る
           </Button>
-          <Button variant="outline" onClick={handleSkip} borderColor="gray.600" color="gray.300">
+          <Button
+            variant="outline"
+            onClick={handleSkip}
+            borderColor="border.default"
+            color="fg.default"
+          >
             スキップ
           </Button>
         </HStack>

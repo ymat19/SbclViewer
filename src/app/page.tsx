@@ -175,7 +175,7 @@ function HomeContent() {
         )}
       </Toaster>
       <AnimeDetailDialog anime={selectedAnime} open={isDialogOpen} onClose={handleCloseDialog} />
-      <Box minH="100vh" bg="gray.50" _dark={{ bg: 'gray.900' }} py={4} px={4}>
+      <Box minH="100vh" bg="bg.canvas" color="fg.default" py={4} px={4}>
         <Container maxW="6xl">
           <VStack gap={6} align="stretch">
             <Flex justify="space-between" align="center" gap={4}>
@@ -211,9 +211,8 @@ function HomeContent() {
                   <NativeSelectField
                     value={selectedQuarter}
                     onChange={(e) => setSelectedQuarter(e.target.value)}
-                    bg="white"
+                    bg="bg.surface"
                     color="fg.default"
-                    _dark={{ bg: 'gray.800', color: 'fg.default' }}
                   >
                     {quarters.map((quarter) => (
                       <option key={quarter} value={quarter}>
@@ -273,7 +272,7 @@ function HomeContent() {
                 </Tabs.List>
 
                 <Tabs.Content value={currentTab} pt={4}>
-                  <Card.Root maxH="md" overflowY="auto" bg="white" _dark={{ bg: 'gray.800' }}>
+                  <Card.Root maxH="md" overflowY="auto" bg="bg.surface" borderWidth="1px" borderColor="border.default">
                     {filteredAnime.length === 0 ? (
                       <Card.Body>
                         <Text color="fg.muted">このクォーターに該当する作品がありません。</Text>
@@ -314,7 +313,7 @@ function HomeContent() {
                   {allSongs.length} songs
                 </Badge>
               </Flex>
-              <Card.Root bg="white" _dark={{ bg: 'gray.800' }}>
+              <Card.Root bg="bg.surface" borderWidth="1px" borderColor="border.default">
                 {allSongs.length === 0 ? (
                   <Card.Body>
                     <Text color="fg.muted">
