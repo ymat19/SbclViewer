@@ -7,7 +7,7 @@ import type {
   TrackSearchResult,
 } from '../types';
 
-import { generateCodeChallenge, generateCodeVerifier, generateState } from './pkce';
+import { generateSpotifyAuthUrl } from '@/lib/spotify/auth';
 
 /**
  * Spotifyトークン情報
@@ -60,8 +60,6 @@ export class SpotifyMusicService implements MusicService {
 
   // localStorage keys
   private readonly TOKENS_KEY = 'spotify_tokens';
-  private readonly CODE_VERIFIER_KEY = 'spotify_code_verifier';
-  private readonly AUTH_STATE_KEY = 'spotify_auth_state';
 
   constructor() {
     this.clientId = process.env.NEXT_PUBLIC_SPOTIFY_CLIENT_ID || '';
@@ -79,29 +77,8 @@ export class SpotifyMusicService implements MusicService {
    */
   async authenticate(): Promise<AuthResult> {
     try {
-      // Code VerifierとChallengeを生成
-      const codeVerifier = generateCodeVerifier();
-      const codeChallenge = await generateCodeChallenge(codeVerifier);
-      const state = generateState();
-
-      // localStorageに保存
-      localStorage.setItem(this.CODE_VERIFIER_KEY, codeVerifier);
-      localStorage.setItem(this.AUTH_STATE_KEY, state);
-
-      // 認証URLを構築
-      const params = new URLSearchParams({
-        client_id: this.clientId,
-        response_type: 'code',
-        redirect_uri: this.redirectUri,
-        scope: this.scopes.join(' '),
-        code_challenge_method: 'S256',
-        code_challenge: codeChallenge,
-        state,
-      });
-
-      const authUrl = `${this.authBase}/authorize?${params.toString()}`;
-
-      // 認証ページにリダイレクト
+      // 認証URLを生成して認証ページにリダイレクト
+      const authUrl = await generateSpotifyAuthUrl();
       window.location.href = authUrl;
 
       return { success: true };
@@ -112,77 +89,6 @@ export class SpotifyMusicService implements MusicService {
         error: error instanceof Error ? error.message : 'Unknown error',
       };
     }
-  }
-
-  /**
-   * 認証コールバックを処理（redirectUri先で呼び出される）
-   */
-  async handleAuthCallback(code: string, state: string): Promise<AuthResult> {
-    try {
-      // Stateを検証
-      const savedState = localStorage.getItem(this.AUTH_STATE_KEY);
-      if (!savedState || savedState !== state) {
-        throw new Error('Invalid state parameter');
-      }
-
-      // Code Verifierを取得
-      const codeVerifier = localStorage.getItem(this.CODE_VERIFIER_KEY);
-      if (!codeVerifier) {
-        throw new Error('Code verifier not found');
-      }
-
-      // アクセストークンを取得
-      const tokens = await this.exchangeCodeForToken(code, codeVerifier);
-
-      // トークンを保存
-      this.saveTokens(tokens);
-
-      // 一時データをクリア
-      localStorage.removeItem(this.CODE_VERIFIER_KEY);
-      localStorage.removeItem(this.AUTH_STATE_KEY);
-
-      return { success: true };
-    } catch (error) {
-      console.error('Auth callback failed:', error);
-      return {
-        success: false,
-        error: error instanceof Error ? error.message : 'Unknown error',
-      };
-    }
-  }
-
-  /**
-   * 認証コードをアクセストークンに交換
-   */
-  private async exchangeCodeForToken(code: string, codeVerifier: string): Promise<SpotifyTokens> {
-    const params = new URLSearchParams({
-      grant_type: 'authorization_code',
-      code,
-      redirect_uri: this.redirectUri,
-      client_id: this.clientId,
-      code_verifier: codeVerifier,
-    });
-
-    const response = await fetch(`${this.authBase}/api/token`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/x-www-form-urlencoded',
-      },
-      body: params.toString(),
-    });
-
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(`Token exchange failed: ${error.error_description || error.error}`);
-    }
-
-    const data = await response.json();
-
-    return {
-      accessToken: data.access_token,
-      refreshToken: data.refresh_token,
-      expiresAt: Date.now() + data.expires_in * 1000,
-    };
   }
 
   /**
