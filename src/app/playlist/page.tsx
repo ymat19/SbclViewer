@@ -11,6 +11,12 @@ import {
   Card,
   Badge,
   Spinner,
+  createToaster,
+  Toaster,
+  ToastRoot,
+  ToastTitle,
+  ToastCloseTrigger,
+  ToastActionTrigger,
 } from '@chakra-ui/react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
@@ -25,10 +31,17 @@ import { useAnimeStatuses } from '@/hooks/useAnimeStatuses';
 import { useMusicServiceAuth } from '@/hooks/useMusicServiceAuth';
 import { usePlaylistDrafts } from '@/hooks/usePlaylistDrafts';
 import { useSpotifyAuth } from '@/hooks/useSpotifyAuth';
+import { getMusicServiceInstance } from '@/services/music';
 import type { Anime } from '@/types/anime';
 import type { DraftTrack, PlaylistDraft, SongFilterMode } from '@/types/playlist';
 
 type Step = 'selector' | 'matcher' | 'confirmation';
+
+const toaster = createToaster({
+  placement: 'bottom',
+  duration: 5000,
+  max: 3,
+});
 
 function PlaylistPageContent() {
   const searchParams = useSearchParams();
@@ -46,6 +59,7 @@ function PlaylistPageContent() {
   const [songFilter, setSongFilter] = useState<SongFilterMode>('oped');
   const [matchStartIndex, setMatchStartIndex] = useState(0);
   const [isEditingTrack, setIsEditingTrack] = useState(false);
+  const [creatingPlaylistFor, setCreatingPlaylistFor] = useState<string | null>(null);
   const animeData = animeDataJson as Anime[];
   const filterSongs = useCallback(
     (songs: Anime['songs']) =>
@@ -125,6 +139,56 @@ function PlaylistPageContent() {
     setMatchStartIndex(index);
     setIsEditingTrack(true);
     setCurrentStep('matcher');
+  };
+
+  const handleCreatePlaylist = async (quarter: string) => {
+    const draft = drafts.get(quarter);
+    if (!draft) return;
+
+    // マッチング済みの楽曲のみを抽出
+    const matchedTracks = draft.tracks.filter((t) => t.selectedTrack);
+    if (matchedTracks.length === 0) {
+      toaster.create({
+        title: 'エラー',
+        description: 'プレイリストに追加できる楽曲がありません',
+        type: 'error',
+      });
+      return;
+    }
+
+    setCreatingPlaylistFor(quarter);
+
+    try {
+      const musicService = getMusicServiceInstance();
+      const trackUris = matchedTracks.map((t) => t.selectedTrack!.uri);
+
+      const playlist = await musicService.createPlaylist({
+        name: `${quarter} アニメ主題歌`,
+        description: `${quarter}の視聴済みアニメの主題歌プレイリスト（${matchedTracks.length}曲）`,
+        trackUris,
+      });
+
+      toaster.create({
+        title: 'プレイリストを作成しました',
+        description: `${playlist.name}（${matchedTracks.length}曲）`,
+        type: 'success',
+        action: {
+          label: 'Spotifyで開く',
+          onClick: () => {
+            window.open(playlist.url, '_blank', 'noopener,noreferrer');
+          },
+        },
+      });
+    } catch (error) {
+      console.error('Playlist creation failed:', error);
+      toaster.create({
+        title: 'プレイリスト作成に失敗しました',
+        description: error instanceof Error ? error.message : '不明なエラーが発生しました',
+        type: 'error',
+      });
+    } finally {
+      setCreatingPlaylistFor(null);
+    }
   };
 
   const incomingQuarter = searchParams.get('quarter');
@@ -224,12 +288,13 @@ function PlaylistPageContent() {
                       {allDrafts.map((draft) => (
                         <Box key={draft.quarter} p={4}>
                           <Flex justify="space-between" align="center" gap={4}>
-                            <Box>
+                            <Box flex="1">
                               <Flex gap={2} align="center" mb={1}>
                                 <Text fontWeight="semibold" fontSize="md">
                                   {draft.quarter}
                                 </Text>
                                 <Badge colorScheme="green" fontSize="xs">
+                                  {draft.tracks.filter((t) => t.selectedTrack).length} /{' '}
                                   {draft.tracks.length} 曲
                                 </Badge>
                               </Flex>
@@ -237,13 +302,29 @@ function PlaylistPageContent() {
                                 更新: {new Date(draft.updatedAt).toLocaleString('ja-JP')}
                               </Text>
                             </Box>
-                            <Button
-                              size="sm"
-                              colorScheme="green"
-                              onClick={() => handleSelectQuarter(draft.quarter)}
-                            >
-                              編集
-                            </Button>
+                            <Flex gap={2}>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => handleSelectQuarter(draft.quarter)}
+                                borderColor="border.default"
+                                color="fg.default"
+                              >
+                                編集
+                              </Button>
+                              <Button
+                                size="sm"
+                                colorScheme="green"
+                                onClick={() => handleCreatePlaylist(draft.quarter)}
+                                loading={creatingPlaylistFor === draft.quarter}
+                                disabled={
+                                  creatingPlaylistFor !== null ||
+                                  draft.tracks.filter((t) => t.selectedTrack).length === 0
+                                }
+                              >
+                                プレイリストを作成
+                              </Button>
+                            </Flex>
                           </Flex>
                         </Box>
                       ))}
@@ -320,6 +401,30 @@ function PlaylistPageContent() {
           )}
         </VStack>
       </Container>
+      <Toaster toaster={toaster}>
+        {(toast) => (
+          <ToastRoot key={toast.id} width="auto" maxW="90vw" p={2}>
+            {toast.title && (
+              <ToastTitle fontSize="sm" mb={toast.description ? 1 : 0}>
+                {toast.title}
+              </ToastTitle>
+            )}
+            {toast.description && (
+              <Text fontSize="xs" color="fg.muted">
+                {toast.description}
+              </Text>
+            )}
+            <ToastCloseTrigger top={1} right={1} />
+            {toast.action && (
+              <ToastActionTrigger asChild>
+                <Button size="xs" variant="outline" mt={1} onClick={toast.action.onClick}>
+                  {toast.action.label}
+                </Button>
+              </ToastActionTrigger>
+            )}
+          </ToastRoot>
+        )}
+      </Toaster>
     </Box>
   );
 }
