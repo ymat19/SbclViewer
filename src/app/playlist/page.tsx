@@ -15,6 +15,7 @@ import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { useCallback, useMemo, useState } from 'react';
 
+import animeDataJson from '@/../public/data.json';
 import { QuarterSelector } from '@/components/playlist/QuarterSelector';
 import { TrackConfirmation } from '@/components/playlist/TrackConfirmation';
 import { TrackMatcher } from '@/components/playlist/TrackMatcher';
@@ -23,7 +24,6 @@ import { useAnimeStatuses } from '@/hooks/useAnimeStatuses';
 import { usePlaylistDrafts } from '@/hooks/usePlaylistDrafts';
 import type { Anime } from '@/types/anime';
 import type { DraftTrack, PlaylistDraft, SongFilterMode } from '@/types/playlist';
-import animeDataJson from '@/../public/data.json';
 
 type Step = 'selector' | 'matcher' | 'confirmation';
 

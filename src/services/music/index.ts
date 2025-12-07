@@ -1,5 +1,5 @@
-import type { MusicService, MusicServiceProvider } from './types';
 import { MockMusicService } from './mock/client';
+import type { MusicService, MusicServiceProvider } from './types';
 
 /**
  * 音楽サービスファクトリー

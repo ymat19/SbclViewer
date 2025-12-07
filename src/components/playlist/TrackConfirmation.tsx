@@ -25,7 +25,6 @@ const MotionBox = motion.create(Box);
 const MotionCard = motion.create(Card.Root);
 
 export function TrackConfirmation({
-  quarter,
   tracks,
   onSave,
   onCancel,
@@ -102,6 +101,7 @@ export function TrackConfirmation({
           <VStack gap={2} align="stretch">
             {matchedTracks.map((track, index) => {
               const originalIndex = tracks.indexOf(track);
+
               return (
                 <motion.div
                   key={originalIndex}
@@ -178,6 +178,7 @@ export function TrackConfirmation({
           <VStack gap={2} align="stretch">
             {skippedTracks.map((track, index) => {
               const originalIndex = tracks.indexOf(track);
+
               return (
                 <motion.div
                   key={originalIndex}

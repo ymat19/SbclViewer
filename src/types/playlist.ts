@@ -1,4 +1,5 @@
 import type { Song } from './anime';
+
 import type { TrackSearchResult } from '@/services/music/types';
 
 export type SongFilterMode = 'oped' | 'all';

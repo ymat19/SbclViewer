@@ -64,6 +64,7 @@ export function useTrackSearch() {
    */
   const canAutoMatch = (results: TrackSearchResult[]): boolean => {
     const exactMatches = results.filter((r) => r.confidence === 'exact');
+
     return exactMatches.length === 1;
   };
 

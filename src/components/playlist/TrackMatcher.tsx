@@ -17,7 +17,7 @@ import { useEffect, useState } from 'react';
 
 import { useTrackSearch } from '@/hooks/useTrackSearch';
 import type { TrackSearchResult } from '@/services/music/types';
-import type { Anime, Song } from '@/types/anime';
+import type { Anime } from '@/types/anime';
 import type { DraftTrack } from '@/types/playlist';
 
 interface TrackMatcherProps {
@@ -34,7 +34,6 @@ const MotionBox = motion.create(Box);
 const MotionCard = motion.create(Card.Root);
 
 export function TrackMatcher({
-  quarter,
   animeList,
   onComplete,
   onCancel,

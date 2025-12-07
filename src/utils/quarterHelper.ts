@@ -13,6 +13,7 @@ export function quarterToJapaneseName(quarter: string): string {
   };
 
   const season = seasons[q] || '不明';
+
   return `${year}年${season}アニメ楽曲`;
 }
 
@@ -45,6 +46,7 @@ export function generateMergedPlaylistName(quarters: string[]): string {
  */
 export function parseQuarter(quarter: string): { year: number; q: number } {
   const [yearStr, qStr] = quarter.split('q');
+
   return {
     year: parseInt(yearStr, 10),
     q: parseInt(qStr, 10),

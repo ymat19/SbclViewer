@@ -22,16 +22,16 @@ import {
   ToastActionTrigger,
 } from '@chakra-ui/react';
 import { AnimatePresence } from 'framer-motion';
-import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { Suspense, useMemo, useState } from 'react';
 
+import animeDataJson from '@/../public/data.json';
 import { AnimeDetailDialog } from '@/components/AnimeDetailDialog';
 import { SwipeableAnimeItem } from '@/components/SwipeableAnimeItem';
 import { ColorModeButton } from '@/components/ui/color-mode';
 import { useAnimeStatuses } from '@/hooks/useAnimeStatuses';
 import type { Anime, Song, ViewTab, AnimeStatus } from '@/types/anime';
-import animeDataJson from '@/../public/data.json';
 
 const toaster = createToaster({
   placement: 'bottom',
