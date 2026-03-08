@@ -29,7 +29,7 @@ interface AIAssistProps {
   onSwitchToManual?: () => void;
 }
 
-type Phase = 'searching' | 'copy' | 'import';
+type Phase = 'searching' | 'copy' | 'import' | 'direct-import';
 
 export function AIAssist({ entries, onComplete, onCancel, onSwitchToManual }: AIAssistProps) {
   const { searchTrack } = useTrackSearch();
@@ -150,6 +150,38 @@ export function AIAssist({ entries, onComplete, onCancel, onSwitchToManual }: AI
     }
   };
 
+  const handleDirectImport = () => {
+    setImportError(null);
+    try {
+      const emptySearchResults = new Map<string, TrackSearchResult[]>();
+
+      if (isMultiQuarter) {
+        const parsed = parseMultiAIResponse(importText);
+        const entriesMap = new Map(
+          entries.map((entry) => [
+            entry.quarter,
+            {
+              animeList: entry.animeList,
+              searchResults: emptySearchResults,
+            },
+          ]),
+        );
+        const results = convertMultiDraftTracks(parsed, entriesMap);
+        onComplete(results);
+      } else {
+        const parsed = parseAIResponse(importText);
+        // 単一クォーターの場合、レスポンスのquarterからentriesを特定
+        const entry = entries[0];
+        const tracks = convertToDraftTracks(parsed, entry.animeList, emptySearchResults);
+        const results = new Map<string, DraftTrack[]>();
+        results.set(entry.quarter, tracks);
+        onComplete(results);
+      }
+    } catch (error) {
+      setImportError(error instanceof Error ? error.message : '取り込みに失敗しました。');
+    }
+  };
+
   const quarterLabel = isMultiQuarter ? `${entries.length}シーズン` : (entries[0]?.quarter ?? '');
 
   return (
@@ -179,6 +211,16 @@ export function AIAssist({ entries, onComplete, onCancel, onSwitchToManual }: AI
                 <Progress.Range bg="#ff6b6b" />
               </Progress.Track>
             </Progress.Root>
+            <Button
+              size="sm"
+              variant="outline"
+              borderColor="rgba(255, 255, 255, 0.1)"
+              color="fg.muted"
+              borderRadius="8px"
+              onClick={() => setPhase('direct-import')}
+            >
+              検索をスキップして直接取り込む
+            </Button>
           </VStack>
         )}
 
@@ -222,6 +264,16 @@ export function AIAssist({ entries, onComplete, onCancel, onSwitchToManual }: AI
               onClick={() => setPhase('import')}
             >
               AIの応答を取り込む
+            </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              borderColor="rgba(99, 179, 237, 0.3)"
+              color="#63b3ed"
+              borderRadius="8px"
+              onClick={() => setPhase('direct-import')}
+            >
+              検索スキップで直接取り込む
             </Button>
           </VStack>
         )}
@@ -274,6 +326,61 @@ export function AIAssist({ entries, onComplete, onCancel, onSwitchToManual }: AI
                 disabled={!importText.trim()}
               >
                 取り込み
+              </Button>
+            </Flex>
+          </VStack>
+        )}
+
+        {/* 直接取り込みフェーズ（検索スキップ） */}
+        {phase === 'direct-import' && (
+          <VStack gap={3} align="stretch">
+            <Text fontSize="sm" color="fg.muted">
+              spotifyId付きのJSONを直接貼り付けてください。
+              <br />
+              Spotify検索をスキップし、JSONのspotifyIdをそのまま使用します。
+            </Text>
+            <Textarea
+              value={importText}
+              onChange={(e) => {
+                setImportText(e.target.value);
+                setImportError(null);
+              }}
+              placeholder="spotifyId付きJSONをここに貼り付け..."
+              rows={8}
+              fontSize="xs"
+              bg="rgba(0, 0, 0, 0.2)"
+              borderColor="rgba(255, 255, 255, 0.1)"
+              borderRadius="8px"
+              _focus={{ borderColor: '#63b3ed' }}
+            />
+            {importError && (
+              <Text fontSize="xs" color="red.400">
+                {importError}
+              </Text>
+            )}
+            <Flex gap={2}>
+              <Button
+                size="sm"
+                flex="1"
+                variant="outline"
+                borderColor="rgba(255, 255, 255, 0.1)"
+                color="fg.default"
+                borderRadius="8px"
+                onClick={() => setPhase('searching')}
+              >
+                戻る
+              </Button>
+              <Button
+                size="sm"
+                flex="1"
+                bg="#63b3ed"
+                color="white"
+                _hover={{ bg: '#7ec8f0' }}
+                borderRadius="8px"
+                onClick={handleDirectImport}
+                disabled={!importText.trim()}
+              >
+                直接取り込み
               </Button>
             </Flex>
           </VStack>

@@ -235,7 +235,18 @@ export function convertToDraftTracks(
       }
 
       // spotifyIdで検索候補内のTrackSearchResultを照合
-      const selectedTrack = candidates.find((c) => c.id === responseSong.spotifyId);
+      let selectedTrack = candidates.find((c) => c.id === responseSong.spotifyId);
+
+      // 候補にない場合（検索スキップ時など）、レスポンスからTrackSearchResultを生成
+      if (!selectedTrack && responseSong.spotifyId) {
+        selectedTrack = {
+          id: responseSong.spotifyId,
+          name: responseSong.trackName,
+          artist: responseSong.artist ?? song.artist ?? '',
+          uri: `spotify:track:${responseSong.spotifyId}`,
+          confidence: 'exact',
+        };
+      }
 
       if (selectedTrack) {
         tracks.push({
