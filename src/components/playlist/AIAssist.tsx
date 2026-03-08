@@ -6,75 +6,85 @@ import { useEffect, useRef, useState } from 'react';
 import { useTrackSearch } from '@/hooks/useTrackSearch';
 import {
   generateExportJson,
+  generateMultiExportJson,
   generatePromptText,
   parseAIResponse,
+  parseMultiAIResponse,
   convertToDraftTracks,
+  convertMultiDraftTracks,
 } from '@/lib/ai/exportPrompt';
 import type { TrackSearchResult } from '@/services/music/types';
 import type { Anime } from '@/types/anime';
 import type { DraftTrack } from '@/types/playlist';
 
-interface AIAssistProps {
+interface AIAssistEntry {
   quarter: string;
   animeList: Anime[];
-  onComplete: (tracks: DraftTrack[]) => void;
+}
+
+interface AIAssistProps {
+  entries: AIAssistEntry[];
+  onComplete: (resultsByQuarter: Map<string, DraftTrack[]>) => void;
   onCancel: () => void;
-  onSwitchToManual: () => void;
+  onSwitchToManual?: () => void;
 }
 
 type Phase = 'searching' | 'copy' | 'import';
 
-export function AIAssist({
-  quarter,
-  animeList,
-  onComplete,
-  onCancel,
-  onSwitchToManual,
-}: AIAssistProps) {
+export function AIAssist({ entries, onComplete, onCancel, onSwitchToManual }: AIAssistProps) {
   const { searchTrack } = useTrackSearch();
   const [phase, setPhase] = useState<Phase>('searching');
   const [searchProgress, setSearchProgress] = useState({ current: 0, total: 0 });
-  const [searchResults, setSearchResults] = useState<Map<string, TrackSearchResult[]>>(new Map());
+  const [searchResultsByQuarter, setSearchResultsByQuarter] = useState<
+    Map<string, Map<string, TrackSearchResult[]>>
+  >(new Map());
   const [promptCopied, setPromptCopied] = useState(false);
   const [jsonCopied, setJsonCopied] = useState(false);
   const [importText, setImportText] = useState('');
   const [importError, setImportError] = useState<string | null>(null);
   const searchStartedRef = useRef(false);
 
+  const isMultiQuarter = entries.length > 1;
+
   // マウント時に全曲のSpotify検索を逐次実行
   useEffect(() => {
     if (searchStartedRef.current) return;
     searchStartedRef.current = true;
 
-    const allSongs: { animeId: string; songIndex: number; anime: Anime }[] = [];
-    for (const anime of animeList) {
-      anime.songs.forEach((_, songIndex) => {
-        allSongs.push({ animeId: anime.id, songIndex, anime });
-      });
+    const allSongs: { quarter: string; animeId: string; songIndex: number; anime: Anime }[] = [];
+    for (const entry of entries) {
+      for (const anime of entry.animeList) {
+        anime.songs.forEach((_, songIndex) => {
+          allSongs.push({ quarter: entry.quarter, animeId: anime.id, songIndex, anime });
+        });
+      }
     }
 
     setSearchProgress({ current: 0, total: allSongs.length });
 
     (async () => {
-      const results = new Map<string, TrackSearchResult[]>();
+      const resultsByQuarter = new Map<string, Map<string, TrackSearchResult[]>>();
+      for (const entry of entries) {
+        resultsByQuarter.set(entry.quarter, new Map());
+      }
 
       for (let i = 0; i < allSongs.length; i++) {
-        const { animeId, songIndex, anime } = allSongs[i];
+        const { quarter, animeId, songIndex, anime } = allSongs[i];
         const song = anime.songs[songIndex];
         const key = `${animeId}-${songIndex}`;
 
         try {
           const searchResult = await searchTrack(song);
-          results.set(key, searchResult);
+          resultsByQuarter.get(quarter)!.set(key, searchResult);
         } catch (error) {
           console.error(`Search failed for ${key}:`, error);
-          results.set(key, []);
+          resultsByQuarter.get(quarter)!.set(key, []);
         }
 
         setSearchProgress({ current: i + 1, total: allSongs.length });
       }
 
-      setSearchResults(results);
+      setSearchResultsByQuarter(resultsByQuarter);
       setPhase('copy');
     })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -88,8 +98,23 @@ export function AIAssist({
   };
 
   const handleCopyJson = async () => {
-    const exportData = generateExportJson(quarter, animeList, searchResults);
-    const json = JSON.stringify(exportData, null, 2);
+    let json: string;
+
+    if (isMultiQuarter) {
+      const exportEntries = entries.map((entry) => ({
+        quarter: entry.quarter,
+        animeList: entry.animeList,
+        searchResults: searchResultsByQuarter.get(entry.quarter) ?? new Map(),
+      }));
+      const exportData = generateMultiExportJson(exportEntries);
+      json = JSON.stringify(exportData, null, 2);
+    } else {
+      const entry = entries[0];
+      const searchResults = searchResultsByQuarter.get(entry.quarter) ?? new Map();
+      const exportData = generateExportJson(entry.quarter, entry.animeList, searchResults);
+      json = JSON.stringify(exportData, null, 2);
+    }
+
     await navigator.clipboard.writeText(json);
     setJsonCopied(true);
     setTimeout(() => setJsonCopied(false), 2000);
@@ -98,19 +123,40 @@ export function AIAssist({
   const handleImport = () => {
     setImportError(null);
     try {
-      const parsed = parseAIResponse(importText);
-      const tracks = convertToDraftTracks(parsed, animeList, searchResults);
-      onComplete(tracks);
+      if (isMultiQuarter) {
+        const parsed = parseMultiAIResponse(importText);
+        const entriesMap = new Map(
+          entries.map((entry) => [
+            entry.quarter,
+            {
+              animeList: entry.animeList,
+              searchResults: searchResultsByQuarter.get(entry.quarter) ?? new Map(),
+            },
+          ]),
+        );
+        const results = convertMultiDraftTracks(parsed, entriesMap);
+        onComplete(results);
+      } else {
+        const entry = entries[0];
+        const searchResults = searchResultsByQuarter.get(entry.quarter) ?? new Map();
+        const parsed = parseAIResponse(importText);
+        const tracks = convertToDraftTracks(parsed, entry.animeList, searchResults);
+        const results = new Map<string, DraftTrack[]>();
+        results.set(entry.quarter, tracks);
+        onComplete(results);
+      }
     } catch (error) {
       setImportError(error instanceof Error ? error.message : '取り込みに失敗しました。');
     }
   };
 
+  const quarterLabel = isMultiQuarter ? `${entries.length}シーズン` : (entries[0]?.quarter ?? '');
+
   return (
     <VStack gap={4} align="stretch">
       <Box className="glass-card" p={4}>
         <Heading as="h2" size="sm" mb={3}>
-          AI連携
+          AI連携 {isMultiQuarter && `（${quarterLabel}）`}
         </Heading>
 
         {/* 検索フェーズ */}
@@ -236,15 +282,19 @@ export function AIAssist({
 
       {/* フッター */}
       <Flex justify="space-between" align="center" px={1}>
-        <Button
-          variant="ghost"
-          size="xs"
-          color="fg.muted"
-          _hover={{ color: '#ff6b6b' }}
-          onClick={onSwitchToManual}
-        >
-          手動マッチングに切り替え
-        </Button>
+        {onSwitchToManual ? (
+          <Button
+            variant="ghost"
+            size="xs"
+            color="fg.muted"
+            _hover={{ color: '#ff6b6b' }}
+            onClick={onSwitchToManual}
+          >
+            手動マッチングに切り替え
+          </Button>
+        ) : (
+          <Box />
+        )}
         <Button variant="ghost" size="xs" color="fg.muted" onClick={onCancel}>
           キャンセル
         </Button>
