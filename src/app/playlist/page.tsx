@@ -158,7 +158,7 @@ function MultiAIQuarterSelect({
 
 function PlaylistPageContent() {
   const searchParams = useSearchParams();
-  const { getAllDrafts, saveDraft, deleteDraft, drafts } = usePlaylistDrafts();
+  const { getAllDrafts, saveDraft, saveDrafts, deleteDraft, drafts } = usePlaylistDrafts();
   const { statuses: animeStatuses } = useAnimeStatuses();
   const { isAuthenticated, isChecking, login, checkAuth } = useMusicServiceAuth();
 
@@ -223,17 +223,19 @@ function PlaylistPageContent() {
       const tracks = resultsByQuarter.get(selectedQuarter) ?? [];
       handleMatchingComplete(tracks);
     } else {
-      // 複数シーズン: 各シーズンのドラフトを保存してセレクターに戻る
+      // 複数シーズン: 各シーズンのドラフトを一括保存してセレクターに戻る
+      const draftsToSave = new Map<string, PlaylistDraft>();
+      const now = new Date().toISOString();
       for (const [quarter, tracks] of resultsByQuarter) {
-        const draft: PlaylistDraft = {
+        draftsToSave.set(quarter, {
           quarter,
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
+          createdAt: now,
+          updatedAt: now,
           tracks,
           songFilter,
-        };
-        saveDraft(quarter, draft);
+        });
       }
+      saveDrafts(draftsToSave);
       setSelectedQuartersForAI(new Set());
       setCurrentStep('selector');
       toaster.create({
