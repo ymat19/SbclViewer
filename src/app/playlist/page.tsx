@@ -425,7 +425,12 @@ function PlaylistPageContent() {
 
       const sortedQuarters = Array.from(selectedQuartersForMerge).sort(compareQuarters);
       const playlistName = generateMergedPlaylistName(sortedQuarters);
-      const description = `${sortedQuarters.join(', ')}の視聴済みアニメの主題歌プレイリスト（${allMatchedTracks.length}曲）`;
+      const first = sortedQuarters[0]?.toUpperCase() ?? '';
+      const last = sortedQuarters[sortedQuarters.length - 1]?.toUpperCase() ?? '';
+      const description =
+        sortedQuarters.length <= 8
+          ? `${sortedQuarters.join(', ')}の視聴済みアニメの主題歌プレイリスト（${allMatchedTracks.length}曲）`
+          : `${first}〜${last}（${sortedQuarters.length}シーズン）の視聴済みアニメの主題歌プレイリスト（${allMatchedTracks.length}曲）`;
 
       const playlist = await musicService.createPlaylist({
         name: playlistName,
