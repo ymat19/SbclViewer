@@ -83,12 +83,40 @@ function MultiAIQuarterSelect({
     ),
   ).sort();
 
+  const allSelected =
+    watchedQuarters.length > 0 && watchedQuarters.every((q) => selectedQuarters.has(q));
+
+  const handleToggleAll = () => {
+    if (allSelected) {
+      // 全解除
+      for (const q of watchedQuarters) {
+        if (selectedQuarters.has(q)) onToggleQuarter(q);
+      }
+    } else {
+      // 全選択
+      for (const q of watchedQuarters) {
+        if (!selectedQuarters.has(q)) onToggleQuarter(q);
+      }
+    }
+  };
+
   return (
     <VStack gap={4} align="stretch">
       <Box className="glass-card" p={4}>
-        <Heading as="h2" size="sm" mb={2}>
-          まとめてAI連携
-        </Heading>
+        <Flex justify="space-between" align="center" mb={2}>
+          <Heading as="h2" size="sm">
+            まとめてAI連携
+          </Heading>
+          <Button
+            size="xs"
+            variant="ghost"
+            color="fg.muted"
+            _hover={{ color: '#63b3ed' }}
+            onClick={handleToggleAll}
+          >
+            {allSelected ? '全解除' : '全選択'}
+          </Button>
+        </Flex>
         <Text fontSize="xs" color="fg.muted" mb={4}>
           AI連携するシーズンを選択してください。
         </Text>
@@ -554,9 +582,37 @@ function PlaylistPageContent() {
               {allDrafts.length > 0 && (
                 <Box>
                   <Flex justify="space-between" align="center" mb={3} px={1}>
-                    <Heading as="h2" size="sm">
-                      保存済み
-                    </Heading>
+                    <Flex align="center" gap={2}>
+                      <Heading as="h2" size="sm">
+                        保存済み
+                      </Heading>
+                      {(() => {
+                        const mergeableQuarters = allDrafts
+                          .filter((d) => d.tracks.filter((t) => t.selectedTrack).length > 0)
+                          .map((d) => d.quarter);
+                        const allMergeSelected =
+                          mergeableQuarters.length > 0 &&
+                          mergeableQuarters.every((q) => selectedQuartersForMerge.has(q));
+                        return (
+                          <Button
+                            size="xs"
+                            variant="ghost"
+                            color="fg.muted"
+                            _hover={{ color: '#ff6b6b' }}
+                            onClick={() => {
+                              if (allMergeSelected) {
+                                setSelectedQuartersForMerge(new Set());
+                              } else {
+                                setSelectedQuartersForMerge(new Set(mergeableQuarters));
+                              }
+                            }}
+                            disabled={isCreatingMergedPlaylist || mergeableQuarters.length === 0}
+                          >
+                            {allMergeSelected ? '全解除' : '全選択'}
+                          </Button>
+                        );
+                      })()}
+                    </Flex>
                     {selectedQuartersForMerge.size > 0 && (
                       <Button
                         size="xs"
