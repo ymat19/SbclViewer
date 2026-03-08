@@ -168,7 +168,16 @@ function HomeContent() {
         )}
       </Toaster>
       <AnimeDetailDialog anime={selectedAnime} open={isDialogOpen} onClose={handleCloseDialog} />
-      <Box minH="100vh" bg="bg.canvas" color="fg.default" pt={3} pb={6} px={3} position="relative" zIndex={1}>
+      <Box
+        minH="100vh"
+        bg="bg.canvas"
+        color="fg.default"
+        pt={3}
+        pb={6}
+        px={3}
+        position="relative"
+        zIndex={1}
+      >
         <Container maxW="6xl" px={0}>
           <VStack gap={4} align="stretch">
             {/* Compact Header */}
@@ -270,10 +279,7 @@ function HomeContent() {
                 variant="line"
                 fitted
               >
-                <Tabs.List
-                  borderBottomColor="rgba(255, 255, 255, 0.06)"
-                  gap={0}
-                >
+                <Tabs.List borderBottomColor="rgba(255, 255, 255, 0.06)" gap={0}>
                   <Tabs.Trigger
                     value="unwatched"
                     py={3}
@@ -377,22 +383,12 @@ function HomeContent() {
                 <Heading as="h2" size="sm">
                   視聴済みの楽曲
                 </Heading>
-                <Badge
-                  fontSize="xs"
-                  px={2.5}
-                  py={0.5}
-                  borderRadius="full"
-                  className="badge-teal"
-                >
+                <Badge fontSize="xs" px={2.5} py={0.5} borderRadius="full" className="badge-teal">
                   {allSongs.length}曲
                 </Badge>
               </Flex>
               {allSongs.length === 0 ? (
-                <Box
-                  className="glass-card"
-                  p={5}
-                  textAlign="center"
-                >
+                <Box className="glass-card" p={5} textAlign="center">
                   <Text color="fg.muted" fontSize="sm">
                     右スワイプで視聴済みに追加
                   </Text>
@@ -400,16 +396,17 @@ function HomeContent() {
               ) : (
                 <VStack gap={2} align="stretch">
                   {allSongs.map((song, index) => (
-                    <Box
-                      key={index}
-                      className="glass-card"
-                      p={3}
-                    >
+                    <Box key={index} className="glass-card" p={3}>
                       <Flex mb={1.5} gap={1.5} flexWrap="wrap" align="center">
                         <Badge fontSize="2xs" px={1.5} className="badge-teal">
                           {song.animeName}
                         </Badge>
-                        <Badge fontSize="2xs" px={1.5} bg="rgba(255, 255, 255, 0.06)" color="fg.muted">
+                        <Badge
+                          fontSize="2xs"
+                          px={1.5}
+                          bg="rgba(255, 255, 255, 0.06)"
+                          color="fg.muted"
+                        >
                           {song.type}
                         </Badge>
                       </Flex>
@@ -438,7 +435,9 @@ export default function Home() {
         <Flex minH="100vh" alignItems="center" justifyContent="center" bg="bg.canvas">
           <VStack gap={4}>
             <Spinner size="xl" color="#ff6b6b" />
-            <Text color="fg.muted" fontSize="sm">読み込み中...</Text>
+            <Text color="fg.muted" fontSize="sm">
+              読み込み中...
+            </Text>
           </VStack>
         </Flex>
       }

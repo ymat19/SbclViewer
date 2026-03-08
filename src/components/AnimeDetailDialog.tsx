@@ -47,17 +47,16 @@ export function AnimeDetailDialog({ anime, open, onClose }: AnimeDetailDialogPro
   const shoboiUrl = anime.url;
 
   return (
-    <DialogRoot open={open} onOpenChange={(e) => !e.open && onClose()} size="full" placement="center">
+    <DialogRoot
+      open={open}
+      onOpenChange={(e) => !e.open && onClose()}
+      size="full"
+      placement="center"
+    >
       <Portal>
         <DialogBackdrop bg="rgba(0, 0, 0, 0.7)" backdropFilter="blur(4px)" />
         <DialogPositioner>
-          <DialogContent
-            mx={3}
-            my={6}
-            maxH="90vh"
-            overflowY="auto"
-            className="custom-scroll"
-          >
+          <DialogContent mx={3} my={6} maxH="90vh" overflowY="auto" className="custom-scroll">
             <IconButton
               aria-label="Close dialog"
               onClick={onClose}

@@ -24,7 +24,13 @@ interface AIAssistProps {
 
 type Phase = 'searching' | 'copy' | 'import';
 
-export function AIAssist({ quarter, animeList, onComplete, onCancel, onSwitchToManual }: AIAssistProps) {
+export function AIAssist({
+  quarter,
+  animeList,
+  onComplete,
+  onCancel,
+  onSwitchToManual,
+}: AIAssistProps) {
   const { searchTrack } = useTrackSearch();
   const [phase, setPhase] = useState<Phase>('searching');
   const [searchProgress, setSearchProgress] = useState({ current: 0, total: 0 });
@@ -117,7 +123,9 @@ export function AIAssist({ quarter, animeList, onComplete, onCancel, onSwitchToM
               {searchProgress.current}/{searchProgress.total}曲検索中...
             </Text>
             <Progress.Root
-              value={searchProgress.total > 0 ? (searchProgress.current / searchProgress.total) * 100 : 0}
+              value={
+                searchProgress.total > 0 ? (searchProgress.current / searchProgress.total) * 100 : 0
+              }
               size="sm"
               borderRadius="full"
             >
@@ -237,12 +245,7 @@ export function AIAssist({ quarter, animeList, onComplete, onCancel, onSwitchToM
         >
           手動マッチングに切り替え
         </Button>
-        <Button
-          variant="ghost"
-          size="xs"
-          color="fg.muted"
-          onClick={onCancel}
-        >
+        <Button variant="ghost" size="xs" color="fg.muted" onClick={onCancel}>
           キャンセル
         </Button>
       </Flex>
