@@ -47,16 +47,16 @@ export function AnimeDetailDialog({ anime, open, onClose }: AnimeDetailDialogPro
   const shoboiUrl = anime.url;
 
   return (
-    <DialogRoot open={open} onOpenChange={(e) => !e.open && onClose()} size="lg" placement="center">
+    <DialogRoot open={open} onOpenChange={(e) => !e.open && onClose()} size="full" placement="center">
       <Portal>
-        <DialogBackdrop />
+        <DialogBackdrop bg="rgba(0, 0, 0, 0.7)" backdropFilter="blur(4px)" />
         <DialogPositioner>
           <DialogContent
-            boxShadow="2xl"
-            borderRadius="lg"
-            border="1px solid"
-            borderColor="gray.200"
-            _dark={{ borderColor: 'gray.700' }}
+            mx={3}
+            my={6}
+            maxH="90vh"
+            overflowY="auto"
+            className="custom-scroll"
           >
             <IconButton
               aria-label="Close dialog"
@@ -66,87 +66,84 @@ export function AnimeDetailDialog({ anime, open, onClose }: AnimeDetailDialogPro
               right={2}
               variant="ghost"
               size="sm"
+              color="fg.muted"
+              borderRadius="10px"
+              zIndex={1}
             >
-              <X size={20} />
+              <X size={18} />
             </IconButton>
-            <DialogHeader>
-              <DialogTitle>{anime.name}</DialogTitle>
+            <DialogHeader pt={4} pb={2} px={4}>
+              <DialogTitle fontSize="md" pr={6} lineHeight="1.4">
+                {anime.name}
+              </DialogTitle>
             </DialogHeader>
-            <DialogBody>
+            <DialogBody px={4} py={2}>
               <VStack align="stretch" gap={4}>
-                {/* Quarter Info */}
+                {/* Quarter */}
                 <Box>
-                  <Text fontSize="sm" fontWeight="medium" color="fg.muted">
-                    クォータ
-                  </Text>
-                  <Badge colorScheme="blue" mt={1}>
+                  <Badge fontSize="xs" px={2} className="badge-amber">
                     {anime.quarter}
                   </Badge>
                 </Box>
 
-                {/* URL */}
+                {/* Links */}
                 {(officialUrl || shoboiUrl) && (
-                  <Box>
-                    <Text fontSize="sm" fontWeight="medium" color="fg.muted">
-                      詳細情報
-                    </Text>
-                    <VStack align="start" gap={1} mt={1} fontSize="sm">
-                      {officialUrl && (
-                        <Link
-                          href={officialUrl}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          color="blue.500"
-                          _dark={{ color: 'blue.300' }}
-                          display="flex"
-                          alignItems="center"
-                          gap={1}
-                        >
-                          <span>公式サイトを開く ({officialUrl})</span>
-                          <ExternalLink size={14} />
-                        </Link>
-                      )}
-                      {shoboiUrl && (
-                        <Link
-                          href={shoboiUrl}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          color="blue.500"
-                          _dark={{ color: 'blue.300' }}
-                          display="flex"
-                          alignItems="center"
-                          gap={1}
-                        >
-                          <span>しょぼいカレンダーで見る</span>
-                          <ExternalLink size={14} />
-                        </Link>
-                      )}
-                    </VStack>
-                  </Box>
+                  <VStack align="start" gap={2} fontSize="sm">
+                    {officialUrl && (
+                      <Link
+                        href={officialUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        color="#ff6b6b"
+                        display="flex"
+                        alignItems="center"
+                        gap={1}
+                        fontSize="xs"
+                      >
+                        <span>公式サイト</span>
+                        <ExternalLink size={12} />
+                      </Link>
+                    )}
+                    {shoboiUrl && (
+                      <Link
+                        href={shoboiUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        color="#ff6b6b"
+                        display="flex"
+                        alignItems="center"
+                        gap={1}
+                        fontSize="xs"
+                      >
+                        <span>しょぼいカレンダー</span>
+                        <ExternalLink size={12} />
+                      </Link>
+                    )}
+                  </VStack>
                 )}
 
                 {/* Songs */}
                 <Box>
-                  <Text fontSize="sm" fontWeight="medium" color="fg.muted" mb={2}>
+                  <Text fontSize="xs" fontWeight="medium" color="fg.muted" mb={2}>
                     楽曲一覧 ({anime.songs.length}曲)
                   </Text>
-                  <VStack align="stretch" gap={3}>
+                  <VStack align="stretch" gap={2}>
                     {anime.songs.map((song, index) => (
                       <Box
                         key={index}
                         p={3}
-                        borderRadius="md"
-                        bg="gray.50"
-                        _dark={{ bg: 'gray.700' }}
+                        borderRadius="12px"
+                        bg="rgba(255, 255, 255, 0.04)"
+                        border="1px solid rgba(255, 255, 255, 0.06)"
                       >
-                        <Badge colorScheme="purple" fontSize="xs" mb={1}>
+                        <Badge fontSize="2xs" px={1.5} mb={1} className="badge-coral">
                           {song.type}
                         </Badge>
-                        <Text fontWeight="medium" fontSize="sm">
+                        <Text fontWeight="medium" fontSize="sm" lineHeight="1.3">
                           {song.trackName}
                         </Text>
-                        <VStack align="start" gap={0.5} mt={1} fontSize="xs" color="fg.muted">
-                          {song.artist && <Text>アーティスト: {song.artist}</Text>}
+                        <VStack align="start" gap={0} mt={1} fontSize="xs" color="fg.muted">
+                          {song.artist && <Text>{song.artist}</Text>}
                           {song.composer && <Text>作曲: {song.composer}</Text>}
                           {song.lyrics && <Text>作詞: {song.lyrics}</Text>}
                           {song.arranger && <Text>編曲: {song.arranger}</Text>}
@@ -157,8 +154,17 @@ export function AnimeDetailDialog({ anime, open, onClose }: AnimeDetailDialogPro
                 </Box>
               </VStack>
             </DialogBody>
-            <DialogFooter>
-              <Button onClick={onClose} variant="outline" width="full">
+            <DialogFooter px={4} pb={4} pt={2}>
+              <Button
+                onClick={onClose}
+                width="full"
+                bg="rgba(255, 107, 107, 0.15)"
+                color="#ff6b6b"
+                _hover={{ bg: 'rgba(255, 107, 107, 0.25)' }}
+                borderRadius="12px"
+                h="44px"
+                fontSize="sm"
+              >
                 閉じる
               </Button>
             </DialogFooter>
