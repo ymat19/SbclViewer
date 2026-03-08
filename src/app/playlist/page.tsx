@@ -83,7 +83,8 @@ function MultiAIQuarterSelect({
     ),
   ).sort();
 
-  const allSelected = watchedQuarters.length > 0 && watchedQuarters.every((q) => selectedQuarters.has(q));
+  const allSelected =
+    watchedQuarters.length > 0 && watchedQuarters.every((q) => selectedQuarters.has(q));
 
   const handleToggleAll = () => {
     if (allSelected) {
