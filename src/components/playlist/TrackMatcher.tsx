@@ -12,13 +12,15 @@ import {
   RadioGroup,
   Progress,
   IconButton,
+  Input,
 } from '@chakra-ui/react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Play, Pause } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { Play, Pause, Search } from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
 
 import { useAudioPreview } from '@/hooks/useAudioPreview';
 import { useTrackSearch } from '@/hooks/useTrackSearch';
+import { getMusicServiceInstance } from '@/services/music';
 import type { TrackSearchResult } from '@/services/music/types';
 import type { Anime } from '@/types/anime';
 import type { DraftTrack } from '@/types/playlist';
@@ -83,6 +85,9 @@ export function TrackMatcher({
   const [selectedTrackId, setSelectedTrackId] = useState<string | null>(null);
   const [skippedTrackName, setSkippedTrackName] = useState<string | null>(null);
   const [isNavigatingBack, setIsNavigatingBack] = useState(false);
+  const [manualQuery, setManualQuery] = useState('');
+  const [isManualSearching, setIsManualSearching] = useState(false);
+  const manualInputRef = useRef<HTMLInputElement>(null);
 
   // 全楽曲リストを作成
   const allSongs = animeList.flatMap((anime) =>
@@ -116,6 +121,9 @@ export function TrackMatcher({
       setSearchResults([]);
       setSelectedTrackId(null);
       setSkippedTrackName(null); // スキップメッセージをクリア
+      // 手動検索クエリを現在の楽曲情報でプリセット
+      const queryParts = [currentSong.song.trackName, currentSong.song.artist].filter(Boolean);
+      setManualQuery(queryParts.join(' '));
 
       const results = await searchTrack(currentSong.song);
 
@@ -222,6 +230,26 @@ export function TrackMatcher({
     setCurrentIndex(prevIndex);
     const prevDraft = matchedTracks[prevIndex];
     setSelectedTrackId(prevDraft?.selectedTrack?.id ?? null);
+  };
+
+  const handleManualSearch = async () => {
+    const query = manualQuery.trim();
+    if (!query) return;
+
+    stopPreview();
+    setIsManualSearching(true);
+    setSelectedTrackId(null);
+
+    try {
+      const musicService = getMusicServiceInstance();
+      const results = await musicService.searchTrack({ trackName: query });
+      setSearchResults(results);
+    } catch (error) {
+      console.error('Manual search failed:', error);
+      setSearchResults([]);
+    } finally {
+      setIsManualSearching(false);
+    }
   };
 
   // 過去の選択を復元（戻る時/編集開始時用）
@@ -351,11 +379,37 @@ export function TrackMatcher({
               <Heading size="sm" color="fg.default" fontWeight="semibold">
                 マッチング結果
               </Heading>
-              {isSearching && <Spinner size="sm" color="fg.muted" />}
+              {(isSearching || isManualSearching) && <Spinner size="sm" color="fg.muted" />}
+            </Flex>
+            <Flex gap={2} mt={3}>
+              <Input
+                ref={manualInputRef}
+                size="sm"
+                placeholder="楽曲名やアーティスト名で検索..."
+                value={manualQuery}
+                onChange={(e) => setManualQuery(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    handleManualSearch();
+                  }
+                }}
+                borderColor="border.default"
+                _focus={{ borderColor: 'green.500' }}
+              />
+              <IconButton
+                aria-label="検索"
+                size="sm"
+                variant="outline"
+                onClick={handleManualSearch}
+                disabled={!manualQuery.trim() || isManualSearching}
+                borderColor="border.default"
+              >
+                <Search size={16} />
+              </IconButton>
             </Flex>
           </Card.Header>
           <Card.Body>
-            {isSearching ? (
+            {isSearching || isManualSearching ? (
               <Flex justify="center" py={6} direction="column" align="center" gap={3}>
                 <Spinner size="lg" color="fg.muted" />
                 <Text color="fg.muted" fontSize="sm">

@@ -18,7 +18,7 @@ import {
   ToastCloseTrigger,
   ToastActionTrigger,
 } from '@chakra-ui/react';
-import { ArrowLeft, ListMusic } from 'lucide-react';
+import { ArrowLeft, ListMusic, Trash2 } from 'lucide-react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { Suspense, useCallback, useMemo, useState } from 'react';
@@ -35,11 +35,22 @@ import { useMusicServiceAuth } from '@/hooks/useMusicServiceAuth';
 import { usePlaylistDrafts } from '@/hooks/usePlaylistDrafts';
 import { useSpotifyAuth } from '@/hooks/useSpotifyAuth';
 import { getMusicServiceInstance } from '@/services/music';
-import type { Anime } from '@/types/anime';
+import type { Anime, AnimeStatus } from '@/types/anime';
 import type { DraftTrack, PlaylistDraft, SongFilterMode } from '@/types/playlist';
-import { generateMergedPlaylistName, compareQuarters } from '@/utils/quarterHelper';
+import {
+  generateMergedPlaylistName,
+  compareQuarters,
+  quarterToJapaneseName,
+} from '@/utils/quarterHelper';
 
-type Step = 'selector' | 'method-select' | 'matcher' | 'ai-assist' | 'confirmation';
+type Step =
+  | 'selector'
+  | 'method-select'
+  | 'matcher'
+  | 'ai-assist'
+  | 'confirmation'
+  | 'multi-ai-select'
+  | 'multi-ai-assist';
 
 const toaster = createToaster({
   placement: 'bottom',
@@ -47,9 +58,107 @@ const toaster = createToaster({
   max: 3,
 });
 
+interface MultiAIQuarterSelectProps {
+  animeData: Anime[];
+  animeStatuses: Map<string, AnimeStatus>;
+  selectedQuarters: Set<string>;
+  onToggleQuarter: (quarter: string) => void;
+  onStart: () => void;
+  onCancel: () => void;
+}
+
+function MultiAIQuarterSelect({
+  animeData,
+  animeStatuses,
+  selectedQuarters,
+  onToggleQuarter,
+  onStart,
+  onCancel,
+}: MultiAIQuarterSelectProps) {
+  const watchedQuarters = Array.from(
+    new Set(
+      animeData
+        .filter((anime) => animeStatuses.get(anime.id) === 'watched' && anime.songs.length > 0)
+        .map((anime) => anime.quarter),
+    ),
+  ).sort();
+
+  return (
+    <VStack gap={4} align="stretch">
+      <Box className="glass-card" p={4}>
+        <Heading as="h2" size="sm" mb={2}>
+          まとめてAI連携
+        </Heading>
+        <Text fontSize="xs" color="fg.muted" mb={4}>
+          AI連携するシーズンを選択してください。
+        </Text>
+        <VStack gap={2} align="stretch">
+          {watchedQuarters.map((quarter) => {
+            const quarterAnime = animeData.filter(
+              (anime) =>
+                anime.quarter === quarter &&
+                animeStatuses.get(anime.id) === 'watched' &&
+                anime.songs.length > 0,
+            );
+            const totalSongs = quarterAnime.reduce((sum, anime) => sum + anime.songs.length, 0);
+
+            return (
+              <Box
+                key={quarter}
+                p={3}
+                borderWidth="1px"
+                borderRadius="md"
+                borderColor={
+                  selectedQuarters.has(quarter) ? 'rgba(99, 179, 237, 0.5)' : 'border.default'
+                }
+                bg={selectedQuarters.has(quarter) ? 'rgba(99, 179, 237, 0.08)' : 'bg.surface'}
+                cursor="pointer"
+                onClick={() => onToggleQuarter(quarter)}
+                _hover={{ borderColor: 'rgba(99, 179, 237, 0.3)' }}
+              >
+                <Flex align="center" gap={3}>
+                  <Checkbox
+                    checked={selectedQuarters.has(quarter)}
+                    onClick={(e) => e.stopPropagation()}
+                  />
+                  <Box flex="1">
+                    <Text fontWeight="semibold" fontSize="sm">
+                      {quarterToJapaneseName(quarter)}
+                    </Text>
+                    <Text fontSize="xs" color="fg.muted">
+                      {quarterAnime.length}作品 ・ {totalSongs}曲
+                    </Text>
+                  </Box>
+                </Flex>
+              </Box>
+            );
+          })}
+        </VStack>
+      </Box>
+
+      <Flex justify="space-between" px={1}>
+        <Button variant="ghost" size="xs" color="fg.muted" onClick={onCancel}>
+          キャンセル
+        </Button>
+        <Button
+          size="sm"
+          bg="rgba(99, 179, 237, 0.15)"
+          color="#63b3ed"
+          _hover={{ bg: 'rgba(99, 179, 237, 0.25)' }}
+          borderRadius="8px"
+          onClick={onStart}
+          disabled={selectedQuarters.size === 0}
+        >
+          AI連携開始 ({selectedQuarters.size}シーズン)
+        </Button>
+      </Flex>
+    </VStack>
+  );
+}
+
 function PlaylistPageContent() {
   const searchParams = useSearchParams();
-  const { getAllDrafts, saveDraft, drafts } = usePlaylistDrafts();
+  const { getAllDrafts, saveDraft, deleteDraft, drafts } = usePlaylistDrafts();
   const { statuses: animeStatuses } = useAnimeStatuses();
   const { isAuthenticated, isChecking, login, checkAuth } = useMusicServiceAuth();
 
@@ -65,6 +174,7 @@ function PlaylistPageContent() {
   const [creatingPlaylistFor, setCreatingPlaylistFor] = useState<string | null>(null);
   const [selectedQuartersForMerge, setSelectedQuartersForMerge] = useState<Set<string>>(new Set());
   const [isCreatingMergedPlaylist, setIsCreatingMergedPlaylist] = useState(false);
+  const [selectedQuartersForAI, setSelectedQuartersForAI] = useState<Set<string>>(new Set());
   const animeData = animeDataJson as Anime[];
   const filterSongs = useCallback(
     (songs: Anime['songs']) =>
@@ -105,6 +215,46 @@ function PlaylistPageContent() {
     setMatchedTracks(tracks);
     setCurrentStep('confirmation');
     setIsEditingTrack(false);
+  };
+
+  const handleAIComplete = (resultsByQuarter: Map<string, DraftTrack[]>) => {
+    if (resultsByQuarter.size === 1 && selectedQuarter) {
+      // 単一シーズン: 確認画面へ
+      const tracks = resultsByQuarter.get(selectedQuarter) ?? [];
+      handleMatchingComplete(tracks);
+    } else {
+      // 複数シーズン: 各シーズンのドラフトを保存してセレクターに戻る
+      for (const [quarter, tracks] of resultsByQuarter) {
+        const draft: PlaylistDraft = {
+          quarter,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+          tracks,
+          songFilter,
+        };
+        saveDraft(quarter, draft);
+      }
+      setSelectedQuartersForAI(new Set());
+      setCurrentStep('selector');
+      toaster.create({
+        title: `${resultsByQuarter.size}シーズンのドラフトを保存しました`,
+        type: 'success',
+      });
+    }
+  };
+
+  const handleResetDraft = (quarter: string) => {
+    if (
+      window.confirm(
+        `${quarter} のプレイリスト作成状況をリセットしますか？\n（視聴状況は保持されます）`,
+      )
+    ) {
+      deleteDraft(quarter);
+      toaster.create({
+        title: `${quarter} のドラフトをリセットしました`,
+        type: 'success',
+      });
+    }
   };
 
   const handleSave = () => {
@@ -482,6 +632,19 @@ function PlaylistPageContent() {
                           >
                             作成
                           </Button>
+                          <Button
+                            size="xs"
+                            variant="ghost"
+                            color="fg.muted"
+                            _hover={{ color: 'red.400' }}
+                            borderRadius="8px"
+                            h="34px"
+                            px={2}
+                            onClick={() => handleResetDraft(draft.quarter)}
+                            disabled={isCreatingMergedPlaylist || creatingPlaylistFor !== null}
+                          >
+                            <Trash2 size={14} />
+                          </Button>
                         </Flex>
                       </Box>
                     ))}
@@ -529,6 +692,19 @@ function PlaylistPageContent() {
                       onClick={() => setSongFilter('all')}
                     >
                       全楽曲
+                    </Button>
+                    <Button
+                      size="xs"
+                      bg="rgba(99, 179, 237, 0.2)"
+                      color="#63b3ed"
+                      border="1px solid"
+                      borderColor="rgba(99, 179, 237, 0.3)"
+                      borderRadius="8px"
+                      h="30px"
+                      fontSize="xs"
+                      onClick={() => setCurrentStep('multi-ai-select')}
+                    >
+                      まとめてAI連携
                     </Button>
                   </Flex>
                 </Box>
@@ -614,9 +790,8 @@ function PlaylistPageContent() {
 
           {!isChecking && isAuthenticated && currentStep === 'ai-assist' && selectedQuarter && (
             <AIAssist
-              quarter={selectedQuarter}
-              animeList={quarterAnimeList}
-              onComplete={handleMatchingComplete}
+              entries={[{ quarter: selectedQuarter, animeList: quarterAnimeList }]}
+              onComplete={handleAIComplete}
               onCancel={handleCancel}
               onSwitchToManual={() => setCurrentStep('matcher')}
             />
@@ -643,6 +818,54 @@ function PlaylistPageContent() {
               onEditTrack={handleEditTrack}
             />
           )}
+
+          {/* 複数シーズンAI連携 - シーズン選択 */}
+          {!isChecking && isAuthenticated && currentStep === 'multi-ai-select' && (
+            <MultiAIQuarterSelect
+              animeData={filteredAnimeData}
+              animeStatuses={animeStatuses}
+              selectedQuarters={selectedQuartersForAI}
+              onToggleQuarter={(quarter) => {
+                setSelectedQuartersForAI((prev) => {
+                  const next = new Set(prev);
+                  if (next.has(quarter)) {
+                    next.delete(quarter);
+                  } else {
+                    next.add(quarter);
+                  }
+                  return next;
+                });
+              }}
+              onStart={() => setCurrentStep('multi-ai-assist')}
+              onCancel={() => {
+                setSelectedQuartersForAI(new Set());
+                setCurrentStep('selector');
+              }}
+            />
+          )}
+
+          {/* 複数シーズンAI連携 - AI処理 */}
+          {!isChecking &&
+            isAuthenticated &&
+            currentStep === 'multi-ai-assist' &&
+            selectedQuartersForAI.size > 0 && (
+              <AIAssist
+                entries={Array.from(selectedQuartersForAI)
+                  .sort()
+                  .map((quarter) => ({
+                    quarter,
+                    animeList: filteredAnimeData.filter(
+                      (anime) =>
+                        anime.quarter === quarter && animeStatuses.get(anime.id) === 'watched',
+                    ),
+                  }))}
+                onComplete={handleAIComplete}
+                onCancel={() => {
+                  setSelectedQuartersForAI(new Set());
+                  setCurrentStep('selector');
+                }}
+              />
+            )}
         </VStack>
       </Container>
       <Toaster toaster={toaster}>

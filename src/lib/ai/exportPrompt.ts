@@ -28,6 +28,10 @@ export interface ExportData {
   animeList: ExportAnime[];
 }
 
+export interface MultiExportData {
+  quarters: ExportData[];
+}
+
 interface AIResponseSong {
   type: string;
   trackName: string;
@@ -44,6 +48,10 @@ interface AIResponseAnime {
 interface AIResponseData {
   quarter: string;
   animeList: AIResponseAnime[];
+}
+
+interface MultiAIResponseData {
+  quarters: AIResponseData[];
 }
 
 /**
@@ -89,31 +97,46 @@ export function generatePromptText(): string {
 
 入力と同じJSON構造で、各songにspotifyIdフィールドを追加して返してください。
 candidatesは不要です。正しい候補がない楽曲はsongごと省略してください。
+データにquartersフィールドがある場合は、同じquarters構造で返してください。
 
 楽曲データ：`;
 }
 
 /**
- * AIの応答テキストからJSONを抽出・パース
+ * 複数シーズン用エクスポートJSON生成
  */
-export function parseAIResponse(text: string): AIResponseData {
-  // コードブロック（```json ... ```）からJSONを抽出
+export function generateMultiExportJson(
+  entries: {
+    quarter: string;
+    animeList: Anime[];
+    searchResults: Map<string, TrackSearchResult[]>;
+  }[],
+): MultiExportData {
+  return {
+    quarters: entries.map((entry) =>
+      generateExportJson(entry.quarter, entry.animeList, entry.searchResults),
+    ),
+  };
+}
+
+/**
+ * JSONテキストを抽出（コードブロック対応）
+ */
+function extractJson(text: string): unknown {
   const codeBlockMatch = text.match(/```(?:json)?\s*\n?([\s\S]*?)\n?```/);
   const jsonStr = codeBlockMatch ? codeBlockMatch[1].trim() : text.trim();
 
-  let parsed: unknown;
   try {
-    parsed = JSON.parse(jsonStr);
+    return JSON.parse(jsonStr);
   } catch {
     throw new Error('JSONのパースに失敗しました。正しいJSON形式で貼り付けてください。');
   }
+}
 
-  // 構造バリデーション
-  if (!parsed || typeof parsed !== 'object') {
-    throw new Error('不正なデータ形式です。');
-  }
-
-  const data = parsed as Record<string, unknown>;
+/**
+ * 単一クォーターのバリデーション
+ */
+function validateSingleResponse(data: Record<string, unknown>): AIResponseData {
   if (!data.quarter || !Array.isArray(data.animeList)) {
     throw new Error('quarter または animeList が見つかりません。');
   }
@@ -124,7 +147,47 @@ export function parseAIResponse(text: string): AIResponseData {
     }
   }
 
-  return parsed as AIResponseData;
+  return data as unknown as AIResponseData;
+}
+
+/**
+ * AIの応答テキストからJSONを抽出・パース（単一クォーター）
+ */
+export function parseAIResponse(text: string): AIResponseData {
+  const parsed = extractJson(text);
+
+  if (!parsed || typeof parsed !== 'object') {
+    throw new Error('不正なデータ形式です。');
+  }
+
+  return validateSingleResponse(parsed as Record<string, unknown>);
+}
+
+/**
+ * AIの応答テキストからJSONを抽出・パース（複数クォーター）
+ */
+export function parseMultiAIResponse(text: string): MultiAIResponseData {
+  const parsed = extractJson(text);
+
+  if (!parsed || typeof parsed !== 'object') {
+    throw new Error('不正なデータ形式です。');
+  }
+
+  const data = parsed as Record<string, unknown>;
+
+  // quarters配列がある場合はマルチフォーマット
+  if (Array.isArray(data.quarters)) {
+    const quarters = (data.quarters as Record<string, unknown>[]).map(validateSingleResponse);
+
+    return { quarters };
+  }
+
+  // 単一フォーマットの場合もマルチに変換
+  if (data.quarter && Array.isArray(data.animeList)) {
+    return { quarters: [validateSingleResponse(data)] };
+  }
+
+  throw new Error('quarters 配列または quarter/animeList が見つかりません。');
 }
 
 /**
@@ -196,4 +259,43 @@ export function convertToDraftTracks(
   }
 
   return tracks;
+}
+
+/**
+ * 複数クォーターのパース結果をMap<quarter, DraftTrack[]>に変換
+ */
+export function convertMultiDraftTracks(
+  parsed: MultiAIResponseData,
+  entriesMap: Map<string, { animeList: Anime[]; searchResults: Map<string, TrackSearchResult[]> }>,
+): Map<string, DraftTrack[]> {
+  const result = new Map<string, DraftTrack[]>();
+
+  for (const [quarter, entry] of entriesMap) {
+    const quarterResponse = parsed.quarters.find((q) => q.quarter === quarter);
+
+    if (quarterResponse) {
+      result.set(
+        quarter,
+        convertToDraftTracks(quarterResponse, entry.animeList, entry.searchResults),
+      );
+    } else {
+      // AIレスポンスにこのクォーターがない場合、全曲をスキップ扱い
+      const tracks: DraftTrack[] = [];
+      for (const anime of entry.animeList) {
+        anime.songs.forEach((song, songIndex) => {
+          const key = `${anime.id}-${songIndex}`;
+          tracks.push({
+            animeId: anime.id,
+            animeName: anime.name,
+            song,
+            matchStatus: 'skipped',
+            candidates: entry.searchResults.get(key) ?? [],
+          });
+        });
+      }
+      result.set(quarter, tracks);
+    }
+  }
+
+  return result;
 }
