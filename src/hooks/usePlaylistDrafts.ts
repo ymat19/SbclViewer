@@ -74,6 +74,15 @@ export function usePlaylistDrafts() {
     setPlaylistDrafts(next);
   };
 
+  const saveDrafts = (entries: Map<string, PlaylistDraft>) => {
+    const next = new Map(drafts);
+    const now = new Date().toISOString();
+    for (const [quarter, draft] of entries) {
+      next.set(quarter, { ...draft, updatedAt: now });
+    }
+    setPlaylistDrafts(next);
+  };
+
   const getDraft = (quarter: string): PlaylistDraft | undefined => {
     return drafts.get(quarter);
   };
@@ -88,5 +97,5 @@ export function usePlaylistDrafts() {
     return Array.from(drafts.values());
   };
 
-  return { drafts, saveDraft, getDraft, deleteDraft, getAllDrafts };
+  return { drafts, saveDraft, saveDrafts, getDraft, deleteDraft, getAllDrafts };
 }
