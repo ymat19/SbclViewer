@@ -313,7 +313,10 @@ export class SpotifyMusicService implements MusicService {
       });
 
       if (!createResponse.ok) {
-        throw new Error(`Playlist creation failed: ${createResponse.statusText}`);
+        const errorBody = await createResponse.text().catch(() => '');
+        throw new Error(
+          `Playlist creation failed: ${createResponse.status} ${createResponse.statusText}${errorBody ? ` - ${errorBody}` : ''}`,
+        );
       }
 
       const playlist: SpotifyPlaylistResponse = await createResponse.json();
@@ -367,7 +370,12 @@ export class SpotifyMusicService implements MusicService {
       chunks.push(trackUris.slice(i, i + 100));
     }
 
-    for (const chunk of chunks) {
+    for (let i = 0; i < chunks.length; i++) {
+      // レート制限対策: 2チャンク目以降は少し待つ
+      if (i > 0) {
+        await new Promise((resolve) => setTimeout(resolve, 300));
+      }
+
       const response = await fetch(`${this.apiBase}/playlists/${playlistId}/tracks`, {
         method: 'POST',
         headers: {
@@ -375,12 +383,23 @@ export class SpotifyMusicService implements MusicService {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          uris: chunk,
+          uris: chunks[i],
         }),
       });
 
+      if (response.status === 429) {
+        // レート制限: Retry-Afterヘッダーに従ってリトライ
+        const retryAfter = parseInt(response.headers.get('Retry-After') || '2', 10);
+        await new Promise((resolve) => setTimeout(resolve, retryAfter * 1000));
+        i--; // 同じチャンクをリトライ
+        continue;
+      }
+
       if (!response.ok) {
-        throw new Error(`Failed to add tracks: ${response.statusText}`);
+        const errorBody = await response.text().catch(() => '');
+        throw new Error(
+          `Failed to add tracks (chunk ${i + 1}/${chunks.length}): ${response.status} ${response.statusText}${errorBody ? ` - ${errorBody}` : ''}`,
+        );
       }
     }
   }
