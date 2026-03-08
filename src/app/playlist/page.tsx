@@ -81,7 +81,9 @@ function MultiAIQuarterSelect({
         .filter((anime) => animeStatuses.get(anime.id) === 'watched' && anime.songs.length > 0)
         .map((anime) => anime.quarter),
     ),
-  ).sort();
+  )
+    .sort()
+    .reverse();
 
   const allSelected =
     watchedQuarters.length > 0 && watchedQuarters.every((q) => selectedQuarters.has(q));
@@ -191,7 +193,7 @@ function PlaylistPageContent() {
   const { isAuthenticated, isChecking, login, checkAuth } = useMusicServiceAuth();
 
   useSpotifyAuth(checkAuth);
-  const allDrafts = getAllDrafts();
+  const allDrafts = getAllDrafts().sort((a, b) => compareQuarters(b.quarter, a.quarter));
 
   const [currentStep, setCurrentStep] = useState<Step>('selector');
   const [selectedQuarter, setSelectedQuarter] = useState<string | null>(null);
@@ -381,6 +383,7 @@ function PlaylistPageContent() {
     }
 
     const selectedDrafts = Array.from(selectedQuartersForMerge)
+      .sort((a, b) => compareQuarters(b, a))
       .map((quarter) => ({ quarter, draft: drafts.get(quarter) }))
       .filter(
         (item): item is { quarter: string; draft: PlaylistDraft } => item.draft !== undefined,
@@ -418,7 +421,7 @@ function PlaylistPageContent() {
 
     try {
       const musicService = getMusicServiceInstance();
-      const trackUris = Array.from(trackUrisSet);
+      const trackUris = allMatchedTracks.map((t) => t.selectedTrack!.uri);
 
       const sortedQuarters = Array.from(selectedQuartersForMerge).sort(compareQuarters);
       const playlistName = generateMergedPlaylistName(sortedQuarters);
@@ -910,6 +913,7 @@ function PlaylistPageContent() {
               <AIAssist
                 entries={Array.from(selectedQuartersForAI)
                   .sort()
+                  .reverse()
                   .map((quarter) => ({
                     quarter,
                     animeList: filteredAnimeData.filter(

@@ -27,7 +27,9 @@ export function QuarterSelector({
         .filter((anime) => animeStatuses.get(anime.id) === 'watched' && anime.songs.length > 0)
         .map((anime) => anime.quarter),
     ),
-  ).sort();
+  )
+    .sort()
+    .reverse();
 
   if (watchedQuarters.length === 0) {
     return (
