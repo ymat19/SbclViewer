@@ -56,7 +56,9 @@ body::before {
 }
 
 /* Japanese display headings */
-h1, h2, h3 {
+h1,
+h2,
+h3 {
   font-family: var(--font-display) !important;
   letter-spacing: 0.02em;
 }
@@ -91,7 +93,7 @@ h1, h2, h3 {
 }
 
 /* Tab indicator override for coral accent */
-[data-part="indicator"] {
+[data-part='indicator'] {
   background: var(--accent-coral) !important;
   height: 2px !important;
 }
@@ -122,7 +124,7 @@ h1, h2, h3 {
 }
 
 /* Toast styling */
-[data-scope="toast"] [data-part="root"] {
+[data-scope='toast'] [data-part='root'] {
   background: var(--surface) !important;
   border: 1px solid var(--border-subtle) !important;
   backdrop-filter: blur(12px);

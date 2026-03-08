@@ -7,7 +7,9 @@ const semanticTokens = defineSemanticTokens({
     'bg.canvas': { value: { base: '#1a1a2e', _dark: '#1a1a2e' } },
     'bg.surface': { value: { base: '#16213e', _dark: '#16213e' } },
     'bg.subtle': { value: { base: '#1a2745', _dark: '#1a2745' } },
-    'border.default': { value: { base: 'rgba(255, 255, 255, 0.08)', _dark: 'rgba(255, 255, 255, 0.08)' } },
+    'border.default': {
+      value: { base: 'rgba(255, 255, 255, 0.08)', _dark: 'rgba(255, 255, 255, 0.08)' },
+    },
   },
 });
 

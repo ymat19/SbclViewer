@@ -297,7 +297,16 @@ function PlaylistPageContent() {
       : [];
 
   return (
-    <Box minH="100vh" bg="bg.canvas" color="fg.default" pt={3} pb={6} px={3} position="relative" zIndex={1}>
+    <Box
+      minH="100vh"
+      bg="bg.canvas"
+      color="fg.default"
+      pt={3}
+      pb={6}
+      px={3}
+      position="relative"
+      zIndex={1}
+    >
       <Container maxW="6xl" px={0}>
         <VStack gap={4} align="stretch">
           {/* Header */}
@@ -430,7 +439,8 @@ function PlaylistPageContent() {
                                 {draft.quarter}
                               </Text>
                               <Badge fontSize="2xs" className="badge-teal">
-                                {draft.tracks.filter((t) => t.selectedTrack).length}/{draft.tracks.length}曲
+                                {draft.tracks.filter((t) => t.selectedTrack).length}/
+                                {draft.tracks.length}曲
                               </Badge>
                             </Flex>
                             <Text fontSize="2xs" color="fg.muted" mt={0.5}>
@@ -491,7 +501,11 @@ function PlaylistPageContent() {
                       bg={songFilter === 'oped' ? 'rgba(255, 107, 107, 0.2)' : 'transparent'}
                       color={songFilter === 'oped' ? '#ff6b6b' : 'fg.muted'}
                       border="1px solid"
-                      borderColor={songFilter === 'oped' ? 'rgba(255, 107, 107, 0.3)' : 'rgba(255, 255, 255, 0.1)'}
+                      borderColor={
+                        songFilter === 'oped'
+                          ? 'rgba(255, 107, 107, 0.3)'
+                          : 'rgba(255, 255, 255, 0.1)'
+                      }
                       borderRadius="8px"
                       h="30px"
                       fontSize="xs"
@@ -504,7 +518,11 @@ function PlaylistPageContent() {
                       bg={songFilter === 'all' ? 'rgba(255, 179, 71, 0.2)' : 'transparent'}
                       color={songFilter === 'all' ? '#ffb347' : 'fg.muted'}
                       border="1px solid"
-                      borderColor={songFilter === 'all' ? 'rgba(255, 179, 71, 0.3)' : 'rgba(255, 255, 255, 0.1)'}
+                      borderColor={
+                        songFilter === 'all'
+                          ? 'rgba(255, 179, 71, 0.3)'
+                          : 'rgba(255, 255, 255, 0.1)'
+                      }
                       borderRadius="8px"
                       h="30px"
                       fontSize="xs"
@@ -534,7 +552,11 @@ function PlaylistPageContent() {
                   color="fg.muted"
                   _hover={{ color: 'red.400' }}
                   onClick={() => {
-                    if (window.confirm('すべてのローカルデータ（視聴状況・ドラフト・認証情報）をリセットしますか？')) {
+                    if (
+                      window.confirm(
+                        'すべてのローカルデータ（視聴状況・ドラフト・認証情報）をリセットしますか？',
+                      )
+                    ) {
                       localStorage.clear();
                       window.location.reload();
                     }
@@ -583,12 +605,7 @@ function PlaylistPageContent() {
                     AI連携
                   </Button>
                 </VStack>
-                <Button
-                  variant="ghost"
-                  size="xs"
-                  color="fg.muted"
-                  onClick={handleCancel}
-                >
+                <Button variant="ghost" size="xs" color="fg.muted" onClick={handleCancel}>
                   キャンセル
                 </Button>
               </VStack>
@@ -663,7 +680,9 @@ export default function PlaylistPage() {
         <Flex minH="100vh" alignItems="center" justifyContent="center" bg="bg.canvas">
           <VStack gap={4}>
             <Spinner size="xl" color="#ff6b6b" />
-            <Text color="fg.muted" fontSize="sm">読み込み中...</Text>
+            <Text color="fg.muted" fontSize="sm">
+              読み込み中...
+            </Text>
           </VStack>
         </Flex>
       }
