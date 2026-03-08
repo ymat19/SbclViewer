@@ -239,13 +239,21 @@ export function convertToDraftTracks(
 
       // 候補にない場合（検索スキップ時など）、レスポンスからTrackSearchResultを生成
       if (!selectedTrack && responseSong.spotifyId) {
-        selectedTrack = {
-          id: responseSong.spotifyId,
-          name: responseSong.trackName,
-          artist: responseSong.artist ?? song.artist ?? '',
-          uri: `spotify:track:${responseSong.spotifyId}`,
-          confidence: 'exact',
-        };
+        // base62 IDのバリデーション（22文字の英数字）
+        const isValidId = /^[a-zA-Z0-9]{22}$/.test(responseSong.spotifyId);
+        if (isValidId) {
+          selectedTrack = {
+            id: responseSong.spotifyId,
+            name: responseSong.trackName,
+            artist: responseSong.artist ?? song.artist ?? '',
+            uri: `spotify:track:${responseSong.spotifyId}`,
+            confidence: 'exact',
+          };
+        } else {
+          console.warn(
+            `Invalid Spotify ID "${responseSong.spotifyId}" for "${responseSong.trackName}", skipping`,
+          );
+        }
       }
 
       if (selectedTrack) {

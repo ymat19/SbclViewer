@@ -357,6 +357,14 @@ export class SpotifyMusicService implements MusicService {
   }
 
   /**
+   * Spotify track URIが有効かチェック
+   */
+  private isValidTrackUri(uri: string): boolean {
+    const match = uri.match(/^spotify:track:([a-zA-Z0-9]+)$/);
+    return match !== null && match[1].length === 22;
+  }
+
+  /**
    * プレイリストにトラックを追加
    */
   private async addTracksToPlaylist(
@@ -364,10 +372,29 @@ export class SpotifyMusicService implements MusicService {
     trackUris: string[],
     accessToken: string,
   ): Promise<void> {
+    // 不正なURIをフィルタリング
+    const validUris = trackUris.filter((uri) => {
+      if (!this.isValidTrackUri(uri)) {
+        console.warn(`Skipping invalid track URI: ${uri}`);
+        return false;
+      }
+      return true;
+    });
+
+    if (validUris.length === 0) {
+      throw new Error('No valid track URIs to add');
+    }
+
+    if (validUris.length < trackUris.length) {
+      console.warn(
+        `Filtered out ${trackUris.length - validUris.length} invalid URIs out of ${trackUris.length}`,
+      );
+    }
+
     // 最大100トラックずつ追加
     const chunks = [];
-    for (let i = 0; i < trackUris.length; i += 100) {
-      chunks.push(trackUris.slice(i, i + 100));
+    for (let i = 0; i < validUris.length; i += 100) {
+      chunks.push(validUris.slice(i, i + 100));
     }
 
     for (let i = 0; i < chunks.length; i++) {
