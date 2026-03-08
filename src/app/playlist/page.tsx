@@ -18,11 +18,13 @@ import {
   ToastCloseTrigger,
   ToastActionTrigger,
 } from '@chakra-ui/react';
+import { ArrowLeft, ListMusic } from 'lucide-react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { Suspense, useCallback, useMemo, useState } from 'react';
 
 import animeDataJson from '@/../public/data.json';
+import { AIAssist } from '@/components/playlist/AIAssist';
 import { QuarterSelector } from '@/components/playlist/QuarterSelector';
 import { TrackConfirmation } from '@/components/playlist/TrackConfirmation';
 import { TrackMatcher } from '@/components/playlist/TrackMatcher';
@@ -37,7 +39,7 @@ import type { Anime } from '@/types/anime';
 import type { DraftTrack, PlaylistDraft, SongFilterMode } from '@/types/playlist';
 import { generateMergedPlaylistName, compareQuarters } from '@/utils/quarterHelper';
 
-type Step = 'selector' | 'matcher' | 'confirmation';
+type Step = 'selector' | 'method-select' | 'matcher' | 'ai-assist' | 'confirmation';
 
 const toaster = createToaster({
   placement: 'bottom',
@@ -51,7 +53,6 @@ function PlaylistPageContent() {
   const { statuses: animeStatuses } = useAnimeStatuses();
   const { isAuthenticated, isChecking, login, checkAuth } = useMusicServiceAuth();
 
-  // Spotify認証コールバックを処理（認証完了後に状態を再チェック）
   useSpotifyAuth(checkAuth);
   const allDrafts = getAllDrafts();
 
@@ -83,7 +84,6 @@ function PlaylistPageContent() {
 
   const handleSelectQuarter = (quarter: string) => {
     setSelectedQuarter(quarter);
-    // 既存のドラフトがあれば読み込む
     const existingDraft = drafts.get(quarter);
     if (existingDraft) {
       setMatchedTracks(existingDraft.tracks);
@@ -97,7 +97,7 @@ function PlaylistPageContent() {
       setMatchedTracks([]);
       setMatchStartIndex(0);
       setIsEditingTrack(false);
-      setCurrentStep('matcher');
+      setCurrentStep('method-select');
     }
   };
 
@@ -149,12 +149,10 @@ function PlaylistPageContent() {
     const draft = drafts.get(quarter);
     if (!draft) return;
 
-    // マッチング済みの楽曲のみを抽出
     const matchedTracks = draft.tracks.filter((t) => t.selectedTrack);
     if (matchedTracks.length === 0) {
       toaster.create({
-        title: 'エラー',
-        description: 'プレイリストに追加できる楽曲がありません',
+        title: 'プレイリストに追加できる楽曲がありません',
         type: 'error',
       });
       return;
@@ -173,8 +171,7 @@ function PlaylistPageContent() {
       });
 
       toaster.create({
-        title: 'プレイリストを作成しました',
-        description: `${playlist.name}（${matchedTracks.length}曲）`,
+        title: `${playlist.name}を作成しました`,
         type: 'success',
         action: {
           label: 'Spotifyで開く',
@@ -186,8 +183,7 @@ function PlaylistPageContent() {
     } catch (error) {
       console.error('Playlist creation failed:', error);
       toaster.create({
-        title: 'プレイリスト作成に失敗しました',
-        description: error instanceof Error ? error.message : '不明なエラーが発生しました',
+        title: error instanceof Error ? error.message : 'プレイリスト作成に失敗しました',
         type: 'error',
       });
     } finally {
@@ -198,14 +194,12 @@ function PlaylistPageContent() {
   const handleCreateMergedPlaylist = async () => {
     if (selectedQuartersForMerge.size === 0) {
       toaster.create({
-        title: 'エラー',
-        description: 'クォーターを選択してください',
+        title: 'クォーターを選択してください',
         type: 'error',
       });
       return;
     }
 
-    // 選択されたクォーターのドラフトを取得
     const selectedDrafts = Array.from(selectedQuartersForMerge)
       .map((quarter) => ({ quarter, draft: drafts.get(quarter) }))
       .filter(
@@ -214,14 +208,12 @@ function PlaylistPageContent() {
 
     if (selectedDrafts.length === 0) {
       toaster.create({
-        title: 'エラー',
-        description: '選択されたクォーターのプレイリストが見つかりません',
+        title: 'プレイリストが見つかりません',
         type: 'error',
       });
       return;
     }
 
-    // 全てのマッチング済みトラックを収集（重複を除く）
     const trackUrisSet = new Set<string>();
     const allMatchedTracks: DraftTrack[] = [];
 
@@ -236,8 +228,7 @@ function PlaylistPageContent() {
 
     if (allMatchedTracks.length === 0) {
       toaster.create({
-        title: 'エラー',
-        description: 'プレイリストに追加できる楽曲がありません',
+        title: 'プレイリストに追加できる楽曲がありません',
         type: 'error',
       });
       return;
@@ -249,7 +240,6 @@ function PlaylistPageContent() {
       const musicService = getMusicServiceInstance();
       const trackUris = Array.from(trackUrisSet);
 
-      // クォーターをソートしてプレイリスト名を生成
       const sortedQuarters = Array.from(selectedQuartersForMerge).sort(compareQuarters);
       const playlistName = generateMergedPlaylistName(sortedQuarters);
       const description = `${sortedQuarters.join(', ')}の視聴済みアニメの主題歌プレイリスト（${allMatchedTracks.length}曲）`;
@@ -261,8 +251,7 @@ function PlaylistPageContent() {
       });
 
       toaster.create({
-        title: 'プレイリストを作成しました',
-        description: `${playlist.name}（${allMatchedTracks.length}曲）`,
+        title: `${playlist.name}を作成しました`,
         type: 'success',
         action: {
           label: 'Spotifyで開く',
@@ -272,13 +261,11 @@ function PlaylistPageContent() {
         },
       });
 
-      // 選択をクリア
       setSelectedQuartersForMerge(new Set());
     } catch (error) {
       console.error('Merged playlist creation failed:', error);
       toaster.create({
-        title: 'プレイリスト作成に失敗しました',
-        description: error instanceof Error ? error.message : '不明なエラーが発生しました',
+        title: error instanceof Error ? error.message : 'プレイリスト作成に失敗しました',
         type: 'error',
       });
     } finally {
@@ -310,194 +297,225 @@ function PlaylistPageContent() {
       : [];
 
   return (
-    <Box minH="100vh" bg="bg.canvas" color="fg.default" py={6} px={4}>
-      <Container maxW="6xl">
-        <VStack gap={6} align="stretch">
-          {/* ヘッダー */}
-          <Flex justify="space-between" align="center" gap={4}>
-            <Heading as="h1" size={{ base: 'lg', md: '2xl' }}>
-              プレイリスト作成
-            </Heading>
-            <Flex gap={2} align="center">
+    <Box minH="100vh" bg="bg.canvas" color="fg.default" pt={3} pb={6} px={3} position="relative" zIndex={1}>
+      <Container maxW="6xl" px={0}>
+        <VStack gap={4} align="stretch">
+          {/* Header */}
+          <Flex justify="space-between" align="center" px={1}>
+            <Flex align="center" gap={2}>
               <Button
                 asChild
-                variant="outline"
-                size={{ base: 'sm', md: 'md' }}
-                borderColor="border.default"
-                color="fg.default"
+                variant="ghost"
+                size="sm"
+                color="fg.muted"
+                px={2}
+                borderRadius="10px"
+                h="34px"
               >
-                <Link href={homeHref}>通常モードに戻る</Link>
+                <Link href={homeHref}>
+                  <ArrowLeft size={16} />
+                </Link>
               </Button>
-              <ColorModeButton />
+              <Flex align="center" gap={2}>
+                <Box
+                  w="32px"
+                  h="32px"
+                  borderRadius="10px"
+                  bg="rgba(255, 107, 107, 0.15)"
+                  display="flex"
+                  alignItems="center"
+                  justifyContent="center"
+                  flexShrink={0}
+                >
+                  <ListMusic size={16} color="#ff6b6b" />
+                </Box>
+                <Heading as="h1" size="md">
+                  プレイリスト
+                </Heading>
+              </Flex>
             </Flex>
+            <ColorModeButton />
           </Flex>
 
-          {/* 説明 */}
+          {/* Instructions */}
           {currentStep === 'selector' && (
-            <Card.Root bg="bg.surface" borderWidth="1px" borderColor="border.default">
-              <Card.Body>
-                <Text mb={2} fontWeight="semibold" fontSize="sm" color="fg.default">
-                  プレイリスト作成の流れ
-                </Text>
-                <VStack align="start" gap={1} fontSize="sm" color="fg.muted">
-                  <Text>1. 視聴済みアニメがあるクォーターを選択</Text>
-                  <Text>2. 楽曲を検索してマッチング（モックサービス使用中）</Text>
-                  <Text>3. 確認画面で楽曲を確定してローカルに保存</Text>
-                  <Text>4. 保存済みプレイリストから音楽サービスのプレイリストを作成</Text>
-                </VStack>
-              </Card.Body>
-            </Card.Root>
+            <Box className="glass-card" p={3}>
+              <VStack align="start" gap={1} fontSize="xs" color="fg.muted">
+                <Text>1. クォーターを選択</Text>
+                <Text>2. 楽曲を検索・マッチング</Text>
+                <Text>3. 確認して保存</Text>
+                <Text>4. プレイリストを作成</Text>
+              </VStack>
+            </Box>
           )}
 
-          {/* 認証状態チェック */}
+          {/* Auth check */}
           {isChecking ? (
-            <Card.Root bg="bg.surface" borderWidth="1px" borderColor="border.default">
-              <Card.Body>
-                <Flex justify="center" align="center" py={4}>
-                  <Spinner size="lg" color="blue.500" />
-                  <Text ml={3} color="fg.muted">
-                    認証状態を確認中...
-                  </Text>
-                </Flex>
-              </Card.Body>
-            </Card.Root>
+            <Flex justify="center" align="center" py={8}>
+              <Spinner size="lg" color="#ff6b6b" />
+              <Text ml={3} color="fg.muted" fontSize="sm">
+                認証確認中...
+              </Text>
+            </Flex>
           ) : !isAuthenticated ? (
-            <Card.Root bg="bg.surface" borderWidth="1px" borderColor="border.default">
-              <Card.Body>
-                <VStack gap={4} align="stretch">
-                  <Box>
-                    <Heading as="h3" size="md" mb={2}>
-                      Spotifyでログイン
-                    </Heading>
-                    <Text fontSize="sm" color="fg.muted">
-                      プレイリストを作成するには、Spotifyアカウントでログインする必要があります。
-                    </Text>
-                  </Box>
-                  <Button colorScheme="green" size="lg" onClick={login} width="full">
+            <Box className="glass-card" p={5}>
+              <VStack gap={4} align="stretch">
+                <Box>
+                  <Heading as="h3" size="sm" mb={2}>
                     Spotifyでログイン
-                  </Button>
-                </VStack>
-              </Card.Body>
-            </Card.Root>
+                  </Heading>
+                  <Text fontSize="xs" color="fg.muted">
+                    プレイリスト作成にはSpotifyアカウントが必要です。
+                  </Text>
+                </Box>
+                <Button
+                  size="lg"
+                  onClick={login}
+                  width="full"
+                  bg="#1DB954"
+                  color="white"
+                  _hover={{ bg: '#1ed760' }}
+                  borderRadius="12px"
+                  h="48px"
+                  fontSize="sm"
+                  fontWeight="semibold"
+                >
+                  Spotifyでログイン
+                </Button>
+              </VStack>
+            </Box>
           ) : null}
 
-          {/* メインコンテンツ */}
+          {/* Main content */}
           {!isChecking && isAuthenticated && currentStep === 'selector' && (
             <>
-              {/* 保存済みドラフト一覧 */}
+              {/* Saved drafts */}
               {allDrafts.length > 0 && (
                 <Box>
-                  <Flex justify="space-between" align="center" mb={3}>
-                    <Heading as="h2" size={{ base: 'md', md: 'lg' }}>
-                      保存済みプレイリスト
+                  <Flex justify="space-between" align="center" mb={3} px={1}>
+                    <Heading as="h2" size="sm">
+                      保存済み
                     </Heading>
                     {selectedQuartersForMerge.size > 0 && (
                       <Button
-                        size="sm"
-                        colorScheme="blue"
+                        size="xs"
+                        bg="rgba(255, 107, 107, 0.15)"
+                        color="#ff6b6b"
+                        _hover={{ bg: 'rgba(255, 107, 107, 0.25)' }}
+                        borderRadius="8px"
+                        fontSize="2xs"
                         onClick={handleCreateMergedPlaylist}
                         loading={isCreatingMergedPlaylist}
                         disabled={isCreatingMergedPlaylist}
                       >
-                        選択したクォーターをまとめる ({selectedQuartersForMerge.size}件)
+                        まとめる ({selectedQuartersForMerge.size})
                       </Button>
                     )}
                   </Flex>
-                  <Card.Root bg="bg.surface" borderWidth="1px" borderColor="border.default">
-                    <VStack gap={0} align="stretch" divideY="1px" divideColor="border.default">
-                      {allDrafts.map((draft) => (
-                        <Box key={draft.quarter} p={4}>
-                          <Flex justify="space-between" align="center" gap={4}>
-                            <Flex align="center" gap={3} flex="1">
-                              <Checkbox
-                                checked={selectedQuartersForMerge.has(draft.quarter)}
-                                onCheckedChange={() => handleToggleQuarterSelection(draft.quarter)}
-                                disabled={
-                                  isCreatingMergedPlaylist ||
-                                  draft.tracks.filter((t) => t.selectedTrack).length === 0
-                                }
-                              />
-                              <Box flex="1">
-                                <Flex gap={2} align="center" mb={1}>
-                                  <Text fontWeight="semibold" fontSize="md">
-                                    {draft.quarter}
-                                  </Text>
-                                  <Badge colorScheme="green" fontSize="xs">
-                                    {draft.tracks.filter((t) => t.selectedTrack).length} /{' '}
-                                    {draft.tracks.length} 曲
-                                  </Badge>
-                                </Flex>
-                                <Text fontSize="sm" color="fg.muted">
-                                  更新: {new Date(draft.updatedAt).toLocaleString('ja-JP')}
-                                </Text>
-                              </Box>
+                  <VStack gap={2} align="stretch">
+                    {allDrafts.map((draft) => (
+                      <Box key={draft.quarter} className="glass-card" p={3}>
+                        <Flex align="center" gap={2} mb={2}>
+                          <Checkbox
+                            checked={selectedQuartersForMerge.has(draft.quarter)}
+                            onCheckedChange={() => handleToggleQuarterSelection(draft.quarter)}
+                            disabled={
+                              isCreatingMergedPlaylist ||
+                              draft.tracks.filter((t) => t.selectedTrack).length === 0
+                            }
+                          />
+                          <Box flex="1">
+                            <Flex gap={2} align="center">
+                              <Text fontWeight="semibold" fontSize="sm">
+                                {draft.quarter}
+                              </Text>
+                              <Badge fontSize="2xs" className="badge-teal">
+                                {draft.tracks.filter((t) => t.selectedTrack).length}/{draft.tracks.length}曲
+                              </Badge>
                             </Flex>
-                            <Flex gap={2}>
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                onClick={() => handleSelectQuarter(draft.quarter)}
-                                borderColor="border.default"
-                                color="fg.default"
-                                disabled={isCreatingMergedPlaylist}
-                              >
-                                編集
-                              </Button>
-                              <Button
-                                size="sm"
-                                colorScheme="green"
-                                onClick={() => handleCreatePlaylist(draft.quarter)}
-                                loading={creatingPlaylistFor === draft.quarter}
-                                disabled={
-                                  creatingPlaylistFor !== null ||
-                                  isCreatingMergedPlaylist ||
-                                  draft.tracks.filter((t) => t.selectedTrack).length === 0
-                                }
-                              >
-                                プレイリストを作成
-                              </Button>
-                            </Flex>
-                          </Flex>
-                        </Box>
-                      ))}
-                    </VStack>
-                  </Card.Root>
+                            <Text fontSize="2xs" color="fg.muted" mt={0.5}>
+                              {new Date(draft.updatedAt).toLocaleString('ja-JP')}
+                            </Text>
+                          </Box>
+                        </Flex>
+                        <Flex gap={2}>
+                          <Button
+                            size="xs"
+                            flex="1"
+                            variant="outline"
+                            onClick={() => handleSelectQuarter(draft.quarter)}
+                            borderColor="rgba(255, 255, 255, 0.1)"
+                            color="fg.default"
+                            borderRadius="8px"
+                            h="34px"
+                            fontSize="xs"
+                            disabled={isCreatingMergedPlaylist}
+                          >
+                            編集
+                          </Button>
+                          <Button
+                            size="xs"
+                            flex="1"
+                            bg="#1DB954"
+                            color="white"
+                            _hover={{ bg: '#1ed760' }}
+                            borderRadius="8px"
+                            h="34px"
+                            fontSize="xs"
+                            onClick={() => handleCreatePlaylist(draft.quarter)}
+                            loading={creatingPlaylistFor === draft.quarter}
+                            disabled={
+                              creatingPlaylistFor !== null ||
+                              isCreatingMergedPlaylist ||
+                              draft.tracks.filter((t) => t.selectedTrack).length === 0
+                            }
+                          >
+                            作成
+                          </Button>
+                        </Flex>
+                      </Box>
+                    ))}
+                  </VStack>
                 </Box>
               )}
 
-              {/* クォーター選択 */}
+              {/* Quarter selector */}
               <Box>
-                <Heading as="h2" size={{ base: 'md', md: 'lg' }} mb={3}>
-                  新しくプレイリストを作成
+                <Heading as="h2" size="sm" mb={3} px={1}>
+                  新規作成
                 </Heading>
-                <Box mb={3}>
-                  <Text color="fg.default" fontSize="sm" mb={2}>
-                    対象楽曲
-                  </Text>
+                <Box mb={3} px={1}>
                   <Flex gap={2} wrap="wrap">
                     <Button
-                      size="sm"
-                      colorScheme="blue"
-                      variant={songFilter === 'oped' ? 'solid' : 'outline'}
+                      size="xs"
+                      bg={songFilter === 'oped' ? 'rgba(255, 107, 107, 0.2)' : 'transparent'}
+                      color={songFilter === 'oped' ? '#ff6b6b' : 'fg.muted'}
+                      border="1px solid"
+                      borderColor={songFilter === 'oped' ? 'rgba(255, 107, 107, 0.3)' : 'rgba(255, 255, 255, 0.1)'}
+                      borderRadius="8px"
+                      h="30px"
+                      fontSize="xs"
                       onClick={() => setSongFilter('oped')}
                     >
                       OP/EDのみ
                     </Button>
                     <Button
-                      size="sm"
-                      colorScheme="gray"
-                      variant={songFilter === 'all' ? 'solid' : 'outline'}
+                      size="xs"
+                      bg={songFilter === 'all' ? 'rgba(255, 179, 71, 0.2)' : 'transparent'}
+                      color={songFilter === 'all' ? '#ffb347' : 'fg.muted'}
+                      border="1px solid"
+                      borderColor={songFilter === 'all' ? 'rgba(255, 179, 71, 0.3)' : 'rgba(255, 255, 255, 0.1)'}
+                      borderRadius="8px"
+                      h="30px"
+                      fontSize="xs"
                       onClick={() => setSongFilter('all')}
                     >
-                      全ての楽曲
+                      全楽曲
                     </Button>
                   </Flex>
-                  <Text color="fg.muted" fontSize="xs" mt={1}>
-                    OP/EDのみではtypeがOP/EDの曲だけを対象にします。
-                  </Text>
                 </Box>
-                <Card.Root bg="bg.surface" borderWidth="1px" borderColor="border.default">
-                  <Card.Body>
+                <Card.Root className="glass-card">
+                  <Card.Body p={3}>
                     <QuarterSelector
                       animeData={filteredAnimeData}
                       animeStatuses={animeStatuses}
@@ -507,7 +525,84 @@ function PlaylistPageContent() {
                   </Card.Body>
                 </Card.Root>
               </Box>
+
+              {/* データリセット */}
+              <Box px={1} pt={2}>
+                <Button
+                  variant="ghost"
+                  size="xs"
+                  color="fg.muted"
+                  _hover={{ color: 'red.400' }}
+                  onClick={() => {
+                    if (window.confirm('すべてのローカルデータ（視聴状況・ドラフト・認証情報）をリセットしますか？')) {
+                      localStorage.clear();
+                      window.location.reload();
+                    }
+                  }}
+                >
+                  すべてのデータをリセット
+                </Button>
+              </Box>
             </>
+          )}
+
+          {!isChecking && isAuthenticated && currentStep === 'method-select' && selectedQuarter && (
+            <Box className="glass-card" p={5}>
+              <VStack gap={4} align="stretch">
+                <Heading as="h3" size="sm">
+                  マッチング方法を選択
+                </Heading>
+                <Text fontSize="xs" color="fg.muted">
+                  楽曲とSpotifyトラックのマッチング方法を選んでください。
+                </Text>
+                <VStack gap={2} align="stretch">
+                  <Button
+                    size="lg"
+                    bg="rgba(255, 107, 107, 0.15)"
+                    color="#ff6b6b"
+                    _hover={{ bg: 'rgba(255, 107, 107, 0.25)' }}
+                    borderRadius="12px"
+                    h="48px"
+                    fontSize="sm"
+                    fontWeight="semibold"
+                    onClick={() => setCurrentStep('matcher')}
+                  >
+                    手動マッチング
+                  </Button>
+                  <Button
+                    size="lg"
+                    bg="rgba(99, 179, 237, 0.15)"
+                    color="#63b3ed"
+                    _hover={{ bg: 'rgba(99, 179, 237, 0.25)' }}
+                    borderRadius="12px"
+                    h="48px"
+                    fontSize="sm"
+                    fontWeight="semibold"
+                    onClick={() => setCurrentStep('ai-assist')}
+                  >
+                    AI連携
+                  </Button>
+                </VStack>
+                <Button
+                  variant="ghost"
+                  size="xs"
+                  color="fg.muted"
+                  onClick={handleCancel}
+                >
+                  キャンセル
+                </Button>
+              </VStack>
+            </Box>
+          )}
+
+          {!isChecking && isAuthenticated && currentStep === 'ai-assist' && selectedQuarter && (
+            <AIAssist
+              quarter={selectedQuarter}
+              animeList={quarterAnimeList}
+              onComplete={handleMatchingComplete}
+              onCancel={handleCancel}
+              onSwitchToManual={() => setCurrentStep('matcher')}
+            />
           )}
 
           {!isChecking && isAuthenticated && currentStep === 'matcher' && selectedQuarter && (
@@ -565,10 +660,10 @@ export default function PlaylistPage() {
   return (
     <Suspense
       fallback={
-        <Flex minH="100vh" alignItems="center" justifyContent="center">
+        <Flex minH="100vh" alignItems="center" justifyContent="center" bg="bg.canvas">
           <VStack gap={4}>
-            <Spinner size="xl" color="blue.500" />
-            <Text color="fg.muted">Loading...</Text>
+            <Spinner size="xl" color="#ff6b6b" />
+            <Text color="fg.muted" fontSize="sm">読み込み中...</Text>
           </VStack>
         </Flex>
       }

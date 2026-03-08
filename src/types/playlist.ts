@@ -14,7 +14,7 @@ export interface DraftTrack {
   song: Song;
 
   // マッチング結果
-  matchStatus: 'auto' | 'manual' | 'pending' | 'skipped';
+  matchStatus: 'auto' | 'manual' | 'pending' | 'skipped' | 'ai';
   selectedTrack?: TrackSearchResult;
   candidates?: TrackSearchResult[];
 }

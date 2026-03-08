@@ -25,25 +25,21 @@ export function SwipeableAnimeItem({
   const x = useMotionValue(0);
   const dragDistance = useRef(0);
 
-  // Set background colors based on current tab
   const getBackgroundTransform = () => {
     if (currentTab === 'unselected') {
-      // Right swipe: watched (green), Left swipe: unwatched (red)
       return {
         range: [-150, 0, 150],
-        colors: ['rgb(239 68 68)', 'transparent', 'rgb(34 197 94)'],
+        colors: ['rgb(239 68 68)', 'transparent', 'rgb(78 205 196)'],
       };
     } else if (currentTab === 'watched') {
-      // Left swipe: unselected (gray)
       return {
         range: [-150, 0],
-        colors: ['rgb(156 163 175)', 'transparent'],
+        colors: ['rgb(255 179 71)', 'transparent'],
       };
     } else {
-      // unwatched: Right swipe: unselected (gray)
       return {
         range: [0, 150],
-        colors: ['transparent', 'rgb(156 163 175)'],
+        colors: ['transparent', 'rgb(255 179 71)'],
       };
     }
   };
@@ -57,49 +53,42 @@ export function SwipeableAnimeItem({
 
     if (currentTab === 'unselected') {
       if (info.offset.x > threshold) {
-        // Right swipe -> watched
         onSetStatus(anime.id, 'watched');
       } else if (info.offset.x < -threshold) {
-        // Left swipe -> unwatched
         onSetStatus(anime.id, 'unwatched');
       }
     } else if (currentTab === 'watched') {
       if (info.offset.x < -threshold) {
-        // Left swipe -> unselected
         onSetStatus(anime.id, null);
       }
     } else {
-      // unwatched
       if (info.offset.x > threshold) {
-        // Right swipe -> unselected
         onSetStatus(anime.id, null);
       }
     }
   };
 
   const handleClick = () => {
-    // モーダルを開くのはドラッグ（スワイプ）がほぼ発生していないときだけに限定
     if (onClickAnime && Math.abs(dragDistance.current) < 10) {
       onClickAnime(anime);
     }
   };
 
-  // Get indicator content based on current tab
   const getIndicatorContent = () => {
     if (currentTab === 'unselected') {
       return {
         left: { icon: X, text: '未視聴' },
-        right: { icon: Check, text: '視聴済み' },
+        right: { icon: Check, text: '視聴済' },
       };
     } else if (currentTab === 'watched') {
       return {
-        left: { icon: RotateCcw, text: '未選択' },
+        left: { icon: RotateCcw, text: '戻す' },
         right: null,
       };
     } else {
       return {
         left: null,
-        right: { icon: RotateCcw, text: '未選択' },
+        right: { icon: RotateCcw, text: '戻す' },
       };
     }
   };
@@ -110,9 +99,10 @@ export function SwipeableAnimeItem({
     <MotionBox
       position="relative"
       overflow="hidden"
+      borderRadius="14px"
       layout
       initial={{ opacity: 1, height: 'auto' }}
-      exit={{ opacity: 0, height: 0, transition: { duration: 0.3 } }}
+      exit={{ opacity: 0, height: 0, marginBottom: 0, transition: { duration: 0.3 } }}
     >
       {/* Background indicators */}
       <MotionBox
@@ -122,22 +112,24 @@ export function SwipeableAnimeItem({
         display="flex"
         alignItems="center"
         justifyContent="space-between"
-        px={6}
+        px={5}
+        borderRadius="14px"
       >
         {indicatorContent.left && (
-          <Flex gap={2} alignItems="center">
-            <indicatorContent.left.icon color="white" size={20} />
-            <Text color="white" fontWeight="semibold" fontSize="sm">
+          <Flex gap={1.5} alignItems="center">
+            <indicatorContent.left.icon color="white" size={16} />
+            <Text color="white" fontWeight="semibold" fontSize="xs">
               {indicatorContent.left.text}
             </Text>
           </Flex>
         )}
+        <Box flex="1" />
         {indicatorContent.right && (
-          <Flex gap={2} alignItems="center">
-            <Text color="white" fontWeight="semibold" fontSize="sm">
+          <Flex gap={1.5} alignItems="center">
+            <Text color="white" fontWeight="semibold" fontSize="xs">
               {indicatorContent.right.text}
             </Text>
-            <indicatorContent.right.icon color="white" size={20} />
+            <indicatorContent.right.icon color="white" size={16} />
           </Flex>
         )}
       </MotionBox>
@@ -156,18 +148,20 @@ export function SwipeableAnimeItem({
         onTap={handleClick}
         style={{ x }}
         position="relative"
-        bg="white"
-        _dark={{ bg: 'gray.800' }}
+        bg="#16213e"
+        borderRadius="14px"
+        border="1px solid rgba(255, 255, 255, 0.06)"
         cursor="grab"
         _active={{ cursor: 'grabbing' }}
+        className="swipe-card"
       >
-        <Flex p={4} gap={3} alignItems="center">
+        <Flex py={3} px={4} gap={3} alignItems="center" minH="52px">
           <Box flex="1" minW="0">
-            <Text fontWeight="medium" wordBreak="break-word">
+            <Text fontWeight="medium" fontSize="sm" wordBreak="break-word" lineHeight="1.4">
               {anime.name}
             </Text>
-            <Text fontSize="sm" color="fg.muted">
-              {anime.songs.length} song{anime.songs.length > 1 ? 's' : ''}
+            <Text fontSize="xs" color="fg.muted" mt={0.5}>
+              {anime.songs.length}曲
             </Text>
           </Box>
         </Flex>

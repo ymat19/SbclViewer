@@ -2,12 +2,12 @@ import { createSystem, defaultConfig, defineConfig, defineSemanticTokens } from 
 
 const semanticTokens = defineSemanticTokens({
   colors: {
-    'fg.default': { value: { base: '{colors.gray.900}', _dark: '{colors.white}' } },
-    'fg.muted': { value: { base: '{colors.gray.600}', _dark: '{colors.gray.300}' } },
-    'bg.canvas': { value: { base: '{colors.gray.50}', _dark: '{colors.gray.900}' } },
-    'bg.surface': { value: { base: '{colors.white}', _dark: '{colors.gray.800}' } },
-    'bg.subtle': { value: { base: '{colors.gray.100}', _dark: '{colors.gray.850}' } },
-    'border.default': { value: { base: '{colors.gray.200}', _dark: '{colors.gray.700}' } },
+    'fg.default': { value: { base: '#eaeaea', _dark: '#eaeaea' } },
+    'fg.muted': { value: { base: '#8892b0', _dark: '#8892b0' } },
+    'bg.canvas': { value: { base: '#1a1a2e', _dark: '#1a1a2e' } },
+    'bg.surface': { value: { base: '#16213e', _dark: '#16213e' } },
+    'bg.subtle': { value: { base: '#1a2745', _dark: '#1a2745' } },
+    'border.default': { value: { base: 'rgba(255, 255, 255, 0.08)', _dark: 'rgba(255, 255, 255, 0.08)' } },
   },
 });
 
@@ -21,7 +21,14 @@ const dialogOverride = {
   ...dialogRecipe,
   base: {
     ...dialogRecipe.base,
-    content: { ...dialogRecipe.base.content, color: 'fg.default' },
+    content: {
+      ...dialogRecipe.base.content,
+      color: 'fg.default',
+      bg: '#16213e',
+      borderRadius: '20px',
+      border: '1px solid rgba(255, 255, 255, 0.08)',
+      boxShadow: '0 25px 60px rgba(0, 0, 0, 0.5)',
+    },
     header: { ...dialogRecipe.base.header, color: 'fg.default' },
     title: { ...dialogRecipe.base.title, color: 'inherit' },
     body: { ...dialogRecipe.base.body, color: 'fg.default' },
@@ -32,6 +39,7 @@ const config = defineConfig({
   globalCss: {
     body: {
       color: 'fg.default',
+      bg: 'bg.canvas',
     },
     'h1, h2, h3, h4, h5, h6': {
       color: 'fg.default',

@@ -20,8 +20,10 @@ import {
   ToastTitle,
   ToastCloseTrigger,
   ToastActionTrigger,
+  IconButton,
 } from '@chakra-ui/react';
 import { AnimatePresence } from 'framer-motion';
+import { ChevronLeft, ChevronRight, ListMusic, Music } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Suspense, useMemo, useState } from 'react';
@@ -37,11 +39,11 @@ import type { Anime, Song, ViewTab, AnimeStatus } from '@/types/anime';
 const toaster = createToaster({
   placement: 'bottom',
   duration: 4000,
-  max: 1, // 同時に1つのトーストのみ表示
+  max: 1,
 });
 
 function HomeContent() {
-  useSpotifyAuth(); // Spotify認証コールバックを処理
+  useSpotifyAuth();
   const router = useRouter();
   const searchParams = useSearchParams();
   const [currentTab, setCurrentTab] = useState<ViewTab>('unselected');
@@ -59,15 +61,10 @@ function HomeContent() {
   const selectedQuarter = selectedQuarterParam ?? defaultQuarter;
   const playlistHref = `/playlist${selectedQuarter ? `?quarter=${encodeURIComponent(selectedQuarter)}` : ''}`;
 
-  // Enhanced setStatus with undo functionality
   const handleSetStatus = (id: string, newStatus: AnimeStatus | null) => {
     const anime = animeData.find((a) => a.id === id);
     const previousStatus = animeStatuses.get(id) || null;
-
-    // Set the new status
     setAnimeStatus(id, newStatus);
-
-    // Show toast with undo option
     const statusText =
       newStatus === 'watched' ? '視聴済み' : newStatus === 'unwatched' ? '未視聴' : '未選択';
     toaster.create({
@@ -87,14 +84,12 @@ function HomeContent() {
     });
   };
 
-  // Update URL when quarter changes
   const setSelectedQuarter = (quarter: string) => {
     const params = new URLSearchParams(searchParams.toString());
     params.set('quarter', quarter);
     router.push(`?${params.toString()}`);
   };
 
-  // Navigate to previous quarter
   const goToPreviousQuarter = () => {
     const currentIndex = quarters.indexOf(selectedQuarter);
     if (currentIndex > 0) {
@@ -102,7 +97,6 @@ function HomeContent() {
     }
   };
 
-  // Navigate to next quarter
   const goToNextQuarter = () => {
     const currentIndex = quarters.indexOf(selectedQuarter);
     if (currentIndex < quarters.length - 1) {
@@ -110,7 +104,6 @@ function HomeContent() {
     }
   };
 
-  // Handle anime click to show details
   const handleAnimeClick = (anime: Anime) => {
     setSelectedAnime(anime);
     setIsDialogOpen(true);
@@ -121,12 +114,10 @@ function HomeContent() {
     setSelectedAnime(null);
   };
 
-  // Filter anime by selected quarter and exclude anime without songs
   const quarterAnime = animeData.filter(
     (anime) => anime.quarter === selectedQuarter && anime.songs.length > 0,
   );
 
-  // Filter by current tab
   const filteredAnime = quarterAnime.filter((anime) => {
     const status = animeStatuses.get(anime.id);
     if (currentTab === 'unselected') {
@@ -138,10 +129,8 @@ function HomeContent() {
     }
   });
 
-  // Get watched anime for song list
   const watchedAnime = quarterAnime.filter((anime) => animeStatuses.get(anime.id) === 'watched');
 
-  // Get all songs from watched anime
   const allSongs: Array<Song & { animeName: string }> = watchedAnime.flatMap((anime) =>
     anime.songs.map((song) => ({
       ...song,
@@ -149,7 +138,6 @@ function HomeContent() {
     })),
   );
 
-  // Count anime in each tab
   const unwatchedCount = quarterAnime.filter(
     (anime) => animeStatuses.get(anime.id) === 'unwatched',
   ).length;
@@ -180,42 +168,75 @@ function HomeContent() {
         )}
       </Toaster>
       <AnimeDetailDialog anime={selectedAnime} open={isDialogOpen} onClose={handleCloseDialog} />
-      <Box minH="100vh" bg="bg.canvas" color="fg.default" py={4} px={4}>
-        <Container maxW="6xl">
-          <VStack gap={6} align="stretch">
-            <Flex justify="space-between" align="center" gap={4}>
-              <Heading as="h1" size={{ base: 'lg', md: '2xl' }}>
-                Anime Song Playlist Creator
-              </Heading>
-              <Flex gap={2} align="center">
-                <Button asChild colorScheme="blue" size={{ base: 'sm', md: 'md' }}>
-                  <Link href={playlistHref}>プレイリストを作成</Link>
+      <Box minH="100vh" bg="bg.canvas" color="fg.default" pt={3} pb={6} px={3} position="relative" zIndex={1}>
+        <Container maxW="6xl" px={0}>
+          <VStack gap={4} align="stretch">
+            {/* Compact Header */}
+            <Flex justify="space-between" align="center" px={1}>
+              <Flex align="center" gap={2}>
+                <Box
+                  w="32px"
+                  h="32px"
+                  borderRadius="10px"
+                  bg="rgba(255, 107, 107, 0.15)"
+                  display="flex"
+                  alignItems="center"
+                  justifyContent="center"
+                  flexShrink={0}
+                >
+                  <Music size={16} color="#ff6b6b" />
+                </Box>
+                <Heading as="h1" size="md" lineHeight="1.2">
+                  アニソン
+                  <Text as="span" fontSize="xs" color="fg.muted" ml={1} fontWeight="normal">
+                    Playlist
+                  </Text>
+                </Heading>
+              </Flex>
+              <Flex gap={1} align="center">
+                <Button
+                  asChild
+                  size="sm"
+                  bg="rgba(255, 107, 107, 0.15)"
+                  color="#ff6b6b"
+                  _hover={{ bg: 'rgba(255, 107, 107, 0.25)' }}
+                  borderRadius="10px"
+                  fontSize="xs"
+                  h="34px"
+                  px={3}
+                >
+                  <Link href={playlistHref}>
+                    <ListMusic size={14} />
+                    作成
+                  </Link>
                 </Button>
                 <ColorModeButton />
               </Flex>
             </Flex>
 
-            {/* Quarter Selector */}
-            <Box>
-              <Text fontSize="sm" fontWeight="medium" mb={2} color="fg.muted">
-                Select Quarter:
-              </Text>
-              <Flex gap={2} align="center" maxW={{ base: 'full', md: '2xl' }}>
-                <Button
+            {/* Quarter Selector - Compact */}
+            <Box className="glass-card" p={3} borderRadius="16px">
+              <Flex gap={2} align="center">
+                <IconButton
                   onClick={goToPreviousQuarter}
                   disabled={quarters.indexOf(selectedQuarter) === 0}
-                  variant="outline"
-                  size="md"
+                  variant="ghost"
+                  size="sm"
                   aria-label="Previous quarter"
+                  color="fg.muted"
+                  minW="36px"
+                  h="36px"
+                  borderRadius="10px"
+                  _hover={{ bg: 'rgba(255, 255, 255, 0.05)' }}
                 >
-                  ←
-                </Button>
-                <NativeSelectRoot flex="1" maxW={{ base: 'full', md: 'xs' }}>
+                  <ChevronLeft size={18} />
+                </IconButton>
+                <NativeSelectRoot flex="1">
                   <NativeSelectField
                     value={selectedQuarter}
                     onChange={(e) => setSelectedQuarter(e.target.value)}
-                    bg="bg.surface"
-                    color="fg.default"
+                    fontSize="sm"
+                    h="36px"
                   >
                     {quarters.map((quarter) => (
                       <option key={quarter} value={quarter}>
@@ -224,70 +245,114 @@ function HomeContent() {
                     ))}
                   </NativeSelectField>
                 </NativeSelectRoot>
-                <Button
+                <IconButton
                   onClick={goToNextQuarter}
                   disabled={quarters.indexOf(selectedQuarter) === quarters.length - 1}
-                  variant="outline"
-                  size="md"
+                  variant="ghost"
+                  size="sm"
                   aria-label="Next quarter"
+                  color="fg.muted"
+                  minW="36px"
+                  h="36px"
+                  borderRadius="10px"
+                  _hover={{ bg: 'rgba(255, 255, 255, 0.05)' }}
                 >
-                  →
-                </Button>
+                  <ChevronRight size={18} />
+                </IconButton>
               </Flex>
             </Box>
 
             {/* Anime List with Tabs */}
             <Box overflow="hidden">
-              <Heading as="h2" size={{ base: 'md', md: 'lg' }} mb={4}>
-                Anime List
-              </Heading>
               <Tabs.Root
                 value={currentTab}
                 onValueChange={(e) => setCurrentTab(e.value as ViewTab)}
-                variant="enclosed"
-                fitted={false}
+                variant="line"
+                fitted
               >
-                <Tabs.List mx={-1}>
-                  <Tabs.Trigger value="unwatched">
-                    <Flex gap={2} align="center">
+                <Tabs.List
+                  borderBottomColor="rgba(255, 255, 255, 0.06)"
+                  gap={0}
+                >
+                  <Tabs.Trigger
+                    value="unwatched"
+                    py={3}
+                    fontSize="sm"
+                    color="fg.muted"
+                    _selected={{ color: '#ff6b6b' }}
+                  >
+                    <Flex gap={1.5} align="center">
                       <Text whiteSpace="nowrap">未視聴</Text>
-                      <Badge colorScheme="red" borderRadius="full">
+                      <Badge
+                        fontSize="2xs"
+                        px={1.5}
+                        py={0}
+                        borderRadius="full"
+                        className="badge-coral"
+                      >
                         {unwatchedCount}
                       </Badge>
                     </Flex>
                   </Tabs.Trigger>
-                  <Tabs.Trigger value="unselected">
-                    <Flex gap={2} align="center">
+                  <Tabs.Trigger
+                    value="unselected"
+                    py={3}
+                    fontSize="sm"
+                    color="fg.muted"
+                    _selected={{ color: '#ffb347' }}
+                  >
+                    <Flex gap={1.5} align="center">
                       <Text whiteSpace="nowrap">未選択</Text>
-                      <Badge colorScheme="gray" borderRadius="full">
+                      <Badge
+                        fontSize="2xs"
+                        px={1.5}
+                        py={0}
+                        borderRadius="full"
+                        className="badge-amber"
+                      >
                         {unselectedCount}
                       </Badge>
                     </Flex>
                   </Tabs.Trigger>
-                  <Tabs.Trigger value="watched">
-                    <Flex gap={2} align="center">
-                      <Text whiteSpace="nowrap">視聴済み</Text>
-                      <Badge colorScheme="green" borderRadius="full">
+                  <Tabs.Trigger
+                    value="watched"
+                    py={3}
+                    fontSize="sm"
+                    color="fg.muted"
+                    _selected={{ color: '#4ecdc4' }}
+                  >
+                    <Flex gap={1.5} align="center">
+                      <Text whiteSpace="nowrap">視聴済</Text>
+                      <Badge
+                        fontSize="2xs"
+                        px={1.5}
+                        py={0}
+                        borderRadius="full"
+                        className="badge-teal"
+                      >
                         {watchedCount}
                       </Badge>
                     </Flex>
                   </Tabs.Trigger>
                 </Tabs.List>
 
-                <Tabs.Content value={currentTab} pt={4}>
+                <Tabs.Content value={currentTab} pt={3} px={0}>
                   <Card.Root
-                    maxH="md"
+                    maxH="50vh"
                     overflowY="auto"
-                    bg="bg.surface"
-                    borderWidth="1px"
-                    borderColor="border.default"
+                    bg="transparent"
+                    border="none"
+                    shadow="none"
+                    className="custom-scroll"
                   >
                     {filteredAnime.length === 0 ? (
-                      <Card.Body>
-                        <Text color="fg.muted">このクォーターに該当する作品がありません。</Text>
+                      <Card.Body py={8}>
+                        <Text color="fg.muted" textAlign="center" fontSize="sm">
+                          該当する作品がありません
+                        </Text>
                       </Card.Body>
                     ) : (
-                      <VStack gap={0} align="stretch" divideY="1px">
+                      <VStack gap={2} align="stretch">
                         <AnimatePresence mode="popLayout">
                           {filteredAnime.map((anime) => (
                             <SwipeableAnimeItem
@@ -308,53 +373,56 @@ function HomeContent() {
 
             {/* Songs List */}
             <Box>
-              <Flex justify="space-between" align="center" mb={4} flexWrap="wrap" gap={2}>
-                <Heading as="h2" size={{ base: 'md', md: 'lg' }}>
-                  Songs from Watched Anime
+              <Flex justify="space-between" align="center" mb={3} px={1}>
+                <Heading as="h2" size="sm">
+                  視聴済みの楽曲
                 </Heading>
                 <Badge
-                  colorScheme="green"
-                  fontSize={{ base: 'xs', md: 'sm' }}
-                  px={3}
-                  py={1}
+                  fontSize="xs"
+                  px={2.5}
+                  py={0.5}
                   borderRadius="full"
+                  className="badge-teal"
                 >
-                  {allSongs.length} songs
+                  {allSongs.length}曲
                 </Badge>
               </Flex>
-              <Card.Root bg="bg.surface" borderWidth="1px" borderColor="border.default">
-                {allSongs.length === 0 ? (
-                  <Card.Body>
-                    <Text color="fg.muted">
-                      Select anime to see their songs. Swipe right to add, swipe left to remove.
-                    </Text>
-                  </Card.Body>
-                ) : (
-                  <VStack gap={0} align="stretch" divideY="1px">
-                    {allSongs.map((song, index) => (
-                      <Box key={index} p={4}>
-                        <Flex mb={1} gap={2} flexWrap="wrap" align="center">
-                          <Badge colorScheme="blue" fontSize="xs">
-                            {song.animeName}
-                          </Badge>
-                          <Badge colorScheme="gray" fontSize="xs">
-                            {song.type}
-                          </Badge>
-                        </Flex>
-                        <Text fontWeight="medium" mb={1}>
-                          {song.trackName}
-                        </Text>
-                        <VStack align="start" gap={0} fontSize="sm" color="fg.muted">
-                          {song.artist && <Text>Artist: {song.artist}</Text>}
-                          {song.composer && <Text>Composer: {song.composer}</Text>}
-                          {song.lyrics && <Text>Lyrics: {song.lyrics}</Text>}
-                          {song.arranger && <Text>Arranger: {song.arranger}</Text>}
-                        </VStack>
-                      </Box>
-                    ))}
-                  </VStack>
-                )}
-              </Card.Root>
+              {allSongs.length === 0 ? (
+                <Box
+                  className="glass-card"
+                  p={5}
+                  textAlign="center"
+                >
+                  <Text color="fg.muted" fontSize="sm">
+                    右スワイプで視聴済みに追加
+                  </Text>
+                </Box>
+              ) : (
+                <VStack gap={2} align="stretch">
+                  {allSongs.map((song, index) => (
+                    <Box
+                      key={index}
+                      className="glass-card"
+                      p={3}
+                    >
+                      <Flex mb={1.5} gap={1.5} flexWrap="wrap" align="center">
+                        <Badge fontSize="2xs" px={1.5} className="badge-teal">
+                          {song.animeName}
+                        </Badge>
+                        <Badge fontSize="2xs" px={1.5} bg="rgba(255, 255, 255, 0.06)" color="fg.muted">
+                          {song.type}
+                        </Badge>
+                      </Flex>
+                      <Text fontWeight="medium" fontSize="sm" mb={0.5}>
+                        {song.trackName}
+                      </Text>
+                      <VStack align="start" gap={0} fontSize="xs" color="fg.muted">
+                        {song.artist && <Text>{song.artist}</Text>}
+                      </VStack>
+                    </Box>
+                  ))}
+                </VStack>
+              )}
             </Box>
           </VStack>
         </Container>
@@ -367,10 +435,10 @@ export default function Home() {
   return (
     <Suspense
       fallback={
-        <Flex minH="100vh" alignItems="center" justifyContent="center">
+        <Flex minH="100vh" alignItems="center" justifyContent="center" bg="bg.canvas">
           <VStack gap={4}>
-            <Spinner size="xl" color="blue.500" />
-            <Text color="fg.muted">Loading...</Text>
+            <Spinner size="xl" color="#ff6b6b" />
+            <Text color="fg.muted" fontSize="sm">読み込み中...</Text>
           </VStack>
         </Flex>
       }
